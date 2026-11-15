@@ -1,0 +1,3374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SIM·MARKET INSTITUTIONAL</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='8,1 24,1 31,8 31,24 24,31 8,31 1,24 1,8' fill='%23050506' stroke='%23ffffff' stroke-width='2'/%3E%3Crect x='8.5' y='17' width='3' height='7' fill='%2371717a'/%3E%3Crect x='14.5' y='12' width='3' height='12' fill='%23d4d4d8'/%3E%3Crect x='20.5' y='7' width='3' height='17' fill='%23ffffff'/%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      margin: 0;
+      background: #060607;
+      color: #d4d4d8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow-x: hidden;
+    }
+    input, select {
+      background: #0c0c0e;
+      border: 1px solid #27272a;
+      border-radius: 5px;
+      padding: 6px 8px;
+      width: 100%;
+      color: #fafafa;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #d4d4d8;
+    }
+    .tk { animation: tk 190s linear infinite; }
+    .tk:hover { animation-play-state: paused; }
+    @keyframes tk { to { transform: translateX(-50%); } }
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(228, 228, 231, 0.45); }
+      50% { border-color: rgba(255, 255, 255, 1); }
+    }
+    .breaking-flash { animation: pulse-border 1.8s ease-in-out infinite; }
+    td, th { padding: 5px 8px; text-align: right; white-space: nowrap; }
+    td:first-child, th:first-child { text-align: left; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { useState, useEffect, useReducer, useRef, useMemo, useCallback } = React;
+const h = htm.bind(React.createElement);
+
+const I18N = {
+  es: {
+    sectors: {
+      CHP: 'Chips & IA', BIG: 'Big Tech', AUT: 'Auto & Robótica',
+      DEF: 'Aeroespacial & Defensa', CON: 'Banca & Consumo', ENE: 'Energía, Oro & Cripto',
+      ETF: 'ETFs 3x Bull/Bear'
+    },
+    news: 'Noticia',
+    save: 'Guardar',
+    capital: 'Capital',
+    equity: 'PATRIMONIO',
+    available: 'DISPONIBLE',
+    forbesRank: 'RANKING FORBES',
+    returnPct: 'RETORNO',
+    navPortfolio: 'Cartera',
+    navOrders: 'Órdenes',
+    navTop100: 'Top 100',
+    navTycoon: 'Tycoon',
+    navMap: 'Mapa',
+    navBank: 'Banco',
+    navBenchmark: 'S&P 500',
+    navHistory: 'Historial',
+    navCapital: 'Capital',
+    navPress: 'Prensa',
+    markets: 'Mercados',
+    sortCap: 'Orden: Valor Empresa',
+    sortChg: 'Orden: Variación %',
+    sortPrice: 'Orden: Precio Acción',
+    searchAssetPlaceholder: 'Buscar ticker o empresa… [Ctrl+K]',
+    fav: '★ Fav',
+    all: 'Todos',
+    allFem: 'Todas',
+    agencyTitle: 'Agencia Financiera',
+    fullPortal: 'Portal Completo',
+    searchNewsPlaceholder: 'Buscar noticia, sector o ticker...',
+    noNewsFor: 'Sin noticias para',
+    candles: 'Velas',
+    area: 'Área',
+    clickChart: 'Clic en gráfico...',
+    addLevel: '+ Nivel',
+    clearLevels: 'Limpiar Niveles',
+    open: 'Abr',
+    high: 'Máx',
+    low: 'Mín',
+    close: 'Cierre',
+    sentiment: 'Sentimiento',
+    upWord: 'Sube',
+    downWord: 'Baja',
+    tabActions: 'Acciones',
+    tabOptions: 'Call / Put',
+    tabBlitz: '⚡ Blitz',
+    callBull: 'CALL (Alcista ↗)',
+    putBear: 'PUT (Bajista ↘)',
+    strikePrice: 'Precio Strike',
+    current: 'Actual',
+    expiration: 'Vencimiento del Contrato',
+    contractsLabel: 'Contratos (1 contrato = 100 acciones)',
+    premiumPerShare: 'Prima por acción:',
+    totalPremiumCost: 'Costo Total Prima:',
+    buyContract: 'COMPRAR CONTRATO',
+    expiryTime: 'Tiempo de Expiración',
+    blitzInvestment: 'Inversión Blitz (USD)',
+    expectedReturn: 'Rendimiento esperado',
+    totalReturn: 'retorno total',
+    upBtn: 'SUBE',
+    downBtn: 'BAJA',
+    activeBlitz: 'Operaciones Blitz en Curso',
+    winning: 'GANANDO',
+    losing: 'EN CONTRA',
+    position: 'POSICIÓN',
+    neutral: 'NEUTRO',
+    unrealizedPnl: 'G/P LATENTE',
+    marketOrder: 'A Mercado',
+    limitOrder: 'Orden Límite',
+    targetPrice: 'Precio Objetivo (USD)',
+    leverage: 'Apalancamiento',
+    maxWord: 'Máx',
+    units: 'Unidades',
+    usdAmount: 'Monto USD',
+    marginToInvest: 'Margen a Invertir (USD)',
+    shareQty: 'Cantidad de Acciones',
+    closeBtn: 'Cerrar',
+    rrRatio: 'Ratio Riesgo / Beneficio (R:R):',
+    applySlTp: 'Aplicar SL / TP',
+    closeShort: 'CERRAR SHORT',
+    buyLong: 'COMPRAR (LONG)',
+    sellLong: 'VENDER LONG',
+    shortSell: 'SHORT (BAJISTA)',
+    orderBook: 'Libro',
+    priceCol: 'Precio',
+    volCol: 'Volumen',
+    tabPortfolio: 'Cartera',
+    tabForbes: 'Top 100 Forbes',
+    tabTycoon: 'Tycoon & Alertas',
+    tabHeatmap: 'Heatmap',
+    tabOrders: 'Órdenes',
+    tabBank: 'Banco',
+    tabSpy: 'vs S&P 500',
+    tabHistory: 'Historial',
+    stockMargin: 'MARGEN ACCIONES',
+    realizedPnl: 'G/P REALIZADA',
+    callPutContracts: 'CONTRATOS CALL/PUT',
+    activeCount: 'activos',
+    thAsset: 'Activo',
+    thType: 'Tipo',
+    thQty: 'Cant.',
+    thEntry: 'Entrada',
+    thCurrent: 'Actual',
+    thPnl: 'G/P $',
+    thContract: 'Contrato',
+    thExpires: 'Vence',
+    thCurrVal: 'Valor Act.',
+    thAction: 'Acción',
+    exercise: 'Ejercer',
+    noOpenPositions: 'Sin posiciones abiertas. Opera Acciones, Opciones Call/Put o Blitz arriba a la derecha.',
+    forbesTitle: 'Ranking Real · Top 100 Multimillonarios del Planeta (15 Nov 2026)',
+    forbesSub: 'Patrimonios reales vinculados directamente a sus empresas y noticias en vivo sin ventajas artificiales.',
+    searchBillPlaceholder: 'Buscar magnate o ticker...',
+    thBillionaire: 'Multimillonario',
+    thCountry: 'País',
+    thEmpire: 'Imperio / Activos',
+    thWealth: 'Fortuna Actual',
+    thSessionChg: 'Var. Sesión',
+    youManager: 'TÚ (Gestor Principal)',
+    yourFund: '🌎 Tu Fondo',
+    yourPortfolio: 'Tu Cartera',
+    aumTitle: 'Capital de Clientes Institucionales (AUM)',
+    aumSub: 'Supera al S&P 500 para atraer fondos de pensiones y cobrar 2% de comisión anual diaria.',
+    currentFee: 'Comisión actual:',
+    maxLevLabel: 'Apalancamiento máx:',
+    upgradesTitle: 'Infraestructura y Mejoras de Terminal',
+    installed: '✓ INSTALADO',
+    acquire: 'Adquirir',
+    earningsCalTitle: 'Calendario Próximos Earnings',
+    inDaysPrefix: 'En ',
+    priceAlertsTitle: 'Alertas de Precio',
+    addAlert: '+ Alerta',
+    missionsTitle: 'Misiones Institucionales',
+    heatmapTitle: 'Mapa de Calor Corporativo por Sector y Capitalización',
+    heatmapSub: 'Clic en cualquier bloque para operar',
+    thOrder: 'Orden',
+    thTargetPx: 'Precio Obj.',
+    thLev: 'Apalanc.',
+    limitBuy: 'Límite Compra',
+    limitSell: 'Límite Venta',
+    cancel: 'Cancelar',
+    noLimitOrders: 'Sin órdenes límite pendientes.',
+    treasuryBonds: 'Bonos del Tesoro (+11% Anual)',
+    treasuryDesc: 'Genera +0.03% de interés compuesto cada noche.',
+    bankDebt: 'Deuda Bancaria (-18% Anual)',
+    bankDebtDesc: 'Cobra -0.05% de interés diario.',
+    buyBonds: 'Comprar Bonos',
+    withdraw: 'Retirar',
+    takeLoan: 'Pedir Préstamo',
+    payDebt: 'Pagar Deuda',
+    yourFundLabel: 'Tu Fondo:',
+    thDate: 'Fecha',
+    thOperation: 'Operación',
+    thPrice: 'Precio',
+    thResult: 'Resultado',
+    capModalTitle: 'Configurar Capital de Juego (USD)',
+    quickCapProfiles: 'Perfiles de Capital Rápidos',
+    customUsdAmount: 'Monto Personalizado en Dólares (USD)',
+    equivalent: 'Equivalente:',
+    applyMode: 'Modo de Aplicación',
+    newGameMode: 'Nueva Partida',
+    newGameDesc: 'Reinicia el mercado y ajusta la liquidez al nuevo monto.',
+    adjustCashMode: 'Ajustar Saldo Actual',
+    adjustCashDesc: 'Conserva tus posiciones y cambia tu efectivo disponible.',
+    applyBtn: 'Aplicar',
+    globalEdition: 'EDICIÓN GLOBAL',
+    portalTitle: 'SIM·MARKET NEWSWIRE · PORTAL FINANCIERO',
+    dispatches: 'despachos',
+    newDispatch: '+ Nuevo Despacho',
+    closeEsc: 'Cerrar [ESC]',
+    allSections: 'Todas las Secciones',
+    filterNewsPlaceholder: 'Filtrar titulares, autores o tickers...',
+    openFullReport: 'Abrir reportaje completo →',
+    featuredAnalysis: 'Análisis Destacados',
+    liveWireTitle: 'Teletipo Financiero en Vivo (Archivo de Sesión)',
+    additionalBulletins: 'boletines adicionales',
+    noMatchingNews: 'No hay noticias que coincidan con el filtro seleccionado.',
+    readFullReport: 'Leer informe completo →',
+    leadBadge: 'PORTADA',
+    marketImpactKeys: 'Claves de Impacto en Mercado:',
+    impactedCompanies: 'Empresas y Activos Impactados · Ejecución Directa',
+    sinceAlert: 'desde alerta',
+    tradeBtn: 'Operar',
+    relatedCoverage: 'Cobertura Relacionada',
+    readArrow: 'Leer →',
+    publishedAt: 'Publicado a las',
+    radarIntercepted: 'RADAR INSIDER INTERCEPTADO:',
+    radarMoveIn: 'Se filtra movimiento inminente en',
+    confirmIn: 'Confirmación en',
+    readFullTimer: 'Leer reportaje completo'
+  },
+  en: {
+    sectors: {
+      CHP: 'Chips & AI', BIG: 'Big Tech', AUT: 'Auto & Robotics',
+      DEF: 'Aerospace & Defense', CON: 'Banking & Consumer', ENE: 'Energy, Gold & Crypto',
+      ETF: '3x Bull/Bear ETFs'
+    },
+    news: 'News',
+    save: 'Save',
+    capital: 'Capital',
+    equity: 'NET EQUITY',
+    available: 'AVAILABLE CASH',
+    forbesRank: 'FORBES RANK',
+    returnPct: 'RETURN',
+    navPortfolio: 'Portfolio',
+    navOrders: 'Orders',
+    navTop100: 'Top 100',
+    navTycoon: 'Tycoon',
+    navMap: 'Heatmap',
+    navBank: 'Bank',
+    navBenchmark: 'S&P 500',
+    navHistory: 'History',
+    navCapital: 'Capital',
+    navPress: 'Press',
+    markets: 'Markets',
+    sortCap: 'Sort: Market Cap',
+    sortChg: 'Sort: Change %',
+    sortPrice: 'Sort: Share Price',
+    searchAssetPlaceholder: 'Search ticker or company… [Ctrl+K]',
+    fav: '★ Fav',
+    all: 'All',
+    allFem: 'All',
+    agencyTitle: 'Financial Wire',
+    fullPortal: 'Full Portal',
+    searchNewsPlaceholder: 'Search news, sector or ticker...',
+    noNewsFor: 'No news found for',
+    candles: 'Candles',
+    area: 'Area',
+    clickChart: 'Click on chart...',
+    addLevel: '+ Level',
+    clearLevels: 'Clear Levels',
+    open: 'Open',
+    high: 'High',
+    low: 'Low',
+    close: 'Close',
+    sentiment: 'Sentiment',
+    upWord: 'Bull',
+    downWord: 'Bear',
+    tabActions: 'Equities',
+    tabOptions: 'Call / Put',
+    tabBlitz: '⚡ Blitz',
+    callBull: 'CALL (Bullish ↗)',
+    putBear: 'PUT (Bearish ↘)',
+    strikePrice: 'Strike Price',
+    current: 'Current',
+    expiration: 'Contract Expiration',
+    contractsLabel: 'Contracts (1 contract = 100 shares)',
+    premiumPerShare: 'Premium per share:',
+    totalPremiumCost: 'Total Premium Cost:',
+    buyContract: 'BUY CONTRACT',
+    expiryTime: 'Expiration Time',
+    blitzInvestment: 'Blitz Investment (USD)',
+    expectedReturn: 'Expected payout',
+    totalReturn: 'total return',
+    upBtn: 'HIGHER',
+    downBtn: 'LOWER',
+    activeBlitz: 'Active Blitz Trades',
+    winning: 'WINNING',
+    losing: 'OUT OF MONEY',
+    position: 'POSITION',
+    neutral: 'NEUTRAL',
+    unrealizedPnl: 'UNREALIZED P&L',
+    marketOrder: 'Market Order',
+    limitOrder: 'Limit Order',
+    targetPrice: 'Target Price (USD)',
+    leverage: 'Leverage',
+    maxWord: 'Max',
+    units: 'Shares',
+    usdAmount: 'USD Amount',
+    marginToInvest: 'Margin to Invest (USD)',
+    shareQty: 'Share Quantity',
+    closeBtn: 'Close',
+    rrRatio: 'Risk / Reward Ratio (R:R):',
+    applySlTp: 'Apply SL / TP',
+    closeShort: 'COVER SHORT',
+    buyLong: 'BUY (LONG)',
+    sellLong: 'SELL LONG',
+    shortSell: 'SHORT SELL',
+    orderBook: 'Order Book',
+    priceCol: 'Price',
+    volCol: 'Volume',
+    tabPortfolio: 'Portfolio',
+    tabForbes: 'Top 100 Forbes',
+    tabTycoon: 'Tycoon & Alerts',
+    tabHeatmap: 'Heatmap',
+    tabOrders: 'Orders',
+    tabBank: 'Bank',
+    tabSpy: 'vs S&P 500',
+    tabHistory: 'History',
+    stockMargin: 'EQUITY MARGIN',
+    realizedPnl: 'REALIZED P&L',
+    callPutContracts: 'CALL/PUT CONTRACTS',
+    activeCount: 'active',
+    thAsset: 'Asset',
+    thType: 'Side',
+    thQty: 'Qty',
+    thEntry: 'Entry',
+    thCurrent: 'Mark',
+    thPnl: 'P&L $',
+    thContract: 'Contract',
+    thExpires: 'Expires',
+    thCurrVal: 'Curr. Val',
+    thAction: 'Action',
+    exercise: 'Exercise',
+    noOpenPositions: 'No open positions. Trade Equities, Call/Put Options, or Blitz on the top right panel.',
+    forbesTitle: 'Live Ranking · World Top 100 Billionaires (Nov 15, 2026)',
+    forbesSub: 'Real-time net worths directly tied to their underlying holdings and live market news.',
+    searchBillPlaceholder: 'Search billionaire or ticker...',
+    thBillionaire: 'Billionaire',
+    thCountry: 'Country',
+    thEmpire: 'Holdings / Empire',
+    thWealth: 'Net Worth',
+    thSessionChg: 'Session Chg',
+    youManager: 'YOU (Managing Partner)',
+    yourFund: '🌎 Your Fund',
+    yourPortfolio: 'Your Portfolio',
+    aumTitle: 'Institutional Assets Under Management (AUM)',
+    aumSub: 'Outperform the S&P 500 to attract pension funds and earn a 2% annual management fee daily.',
+    currentFee: 'Current fee:',
+    maxLevLabel: 'Max leverage:',
+    upgradesTitle: 'Terminal Infrastructure & Upgrades',
+    installed: '✓ INSTALLED',
+    acquire: 'Acquire',
+    earningsCalTitle: 'Upcoming Earnings Calendar',
+    inDaysPrefix: 'In ',
+    priceAlertsTitle: 'Price Alerts',
+    addAlert: '+ Alert',
+    missionsTitle: 'Institutional Milestones',
+    heatmapTitle: 'Corporate Heatmap by Sector & Market Cap',
+    heatmapSub: 'Click any block to trade',
+    thOrder: 'Order',
+    thTargetPx: 'Target Px',
+    thLev: 'Lev.',
+    limitBuy: 'Limit Buy',
+    limitSell: 'Limit Sell',
+    cancel: 'Cancel',
+    noLimitOrders: 'No pending limit orders.',
+    treasuryBonds: 'Treasury Bonds (+11% APY)',
+    treasuryDesc: 'Yields +0.03% compounded interest every night.',
+    bankDebt: 'Credit Line Debt (-18% APR)',
+    bankDebtDesc: 'Charges -0.05% daily interest.',
+    buyBonds: 'Buy Bonds',
+    withdraw: 'Withdraw',
+    takeLoan: 'Borrow Funds',
+    payDebt: 'Repay Debt',
+    yourFundLabel: 'Your Fund:',
+    thDate: 'Timestamp',
+    thOperation: 'Execution',
+    thPrice: 'Price',
+    thResult: 'Result',
+    capModalTitle: 'Configure Trading Capital (USD)',
+    quickCapProfiles: 'Quick Capital Presets',
+    customUsdAmount: 'Custom Amount in US Dollars (USD)',
+    equivalent: 'Equivalent:',
+    applyMode: 'Application Mode',
+    newGameMode: 'New Session',
+    newGameDesc: 'Resets the market and scales liquidity to the new capital.',
+    adjustCashMode: 'Adjust Current Cash',
+    adjustCashDesc: 'Keeps your open positions and updates available cash.',
+    applyBtn: 'Apply',
+    globalEdition: 'GLOBAL EDITION',
+    portalTitle: 'SIM·MARKET NEWSWIRE · FINANCIAL PORTAL',
+    dispatches: 'dispatches',
+    newDispatch: '+ New Dispatch',
+    closeEsc: 'Close [ESC]',
+    allSections: 'All Sections',
+    filterNewsPlaceholder: 'Filter headlines, authors or tickers...',
+    openFullReport: 'Open full report →',
+    featuredAnalysis: 'Featured Analysis',
+    liveWireTitle: 'Live Financial Wire (Session Archive)',
+    additionalBulletins: 'additional bulletins',
+    noMatchingNews: 'No news dispatches match the selected filter.',
+    readFullReport: 'Read full report →',
+    leadBadge: 'LEAD STORY',
+    marketImpactKeys: 'Key Market Impact Drivers:',
+    impactedCompanies: 'Impacted Companies & Assets · Direct Execution',
+    sinceAlert: 'since alert',
+    tradeBtn: 'Trade',
+    relatedCoverage: 'Related Coverage',
+    readArrow: 'Read →',
+    publishedAt: 'Published at',
+    radarIntercepted: 'INSIDER RADAR INTERCEPTED:',
+    radarMoveIn: 'Imminent move detected in',
+    confirmIn: 'Confirmation in',
+    readFullTimer: 'Read full report'
+  }
+};
+
+const ASSET_DOMAINS = {
+  NVDA: 'nvidia.com', AMD: 'amd.com', INTC: 'intel.com', AVGO: 'broadcom.com',
+  OPAI: 'openai.com', QCOM: 'qualcomm.com', TSM: 'tsmc.com', ASML: 'asml.com',
+  MSFT: 'microsoft.com', AAPL: 'apple.com', GOOGL: 'google.com', AMZN: 'amazon.com',
+  META: 'meta.com', NFLX: 'netflix.com', CRM: 'salesforce.com', ADBE: 'adobe.com',
+  TSLA: 'tesla.com', TM: 'toyota.com', F: 'ford.com', GM: 'gm.com', RIVN: 'rivian.com',
+  LMT: 'lockheedmartin.com', SPCX: 'spacex.com', BA: 'boeing.com',
+  NOC: 'northropgrumman.com', RTX: 'rtx.com', JPM: 'jpmorganchase.com',
+  KO: 'coca-cola.com', WMT: 'walmart.com', PFE: 'pfizer.com', MCD: 'mcdonalds.com',
+  DIS: 'thewaltdisneycompany.com', NKE: 'nike.com', PEP: 'pepsico.com', COST: 'costco.com',
+  XOM: 'exxonmobil.com', CVX: 'chevron.com', SPY: 'ssga.com',
+  BTC: 'bitcoin.org', ETH: 'ethereum.org', SOL: 'solana.com', BNB: 'bnbchain.org',
+  TQQQ: 'proshares.com', SQQQ: 'proshares.com', SOXL: 'direxion.com', SOXS: 'direxion.com'
+};
+
+const MEDIA_OUTLETS = [
+  { name: 'Bloomberg Markets', domain: 'bloomberg.com', badge: 'BBG' },
+  { name: 'Reuters Institucional', domain: 'reuters.com', badge: 'RTR' },
+  { name: 'Financial Times', domain: 'ft.com', badge: 'FT' },
+  { name: 'The Wall Street Journal', domain: 'wsj.com', badge: 'WSJ' },
+  { name: 'CNBC Pro Desk', domain: 'cnbc.com', badge: 'CNBC' }
+];
+
+function AssetLogo({ sym, size = 22 }) {
+  const [err, setErr] = useState(false);
+  useEffect(() => { setErr(false); }, [sym]);
+
+  if (sym === 'GOLD') {
+    return h`<div style=${{ width: size, height: size }} class="rounded-full bg-zinc-800 border border-zinc-500 flex items-center justify-center shrink-0 font-black text-[9px] text-zinc-100" title="Gold XAU">Au</div>`;
+  }
+  const domain = ASSET_DOMAINS[sym];
+  if (!domain || err) {
+    return h`<div style=${{ width: size, height: size }} class="rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 font-bold text-[9px] text-zinc-300">${sym.slice(0, 3)}</div>`;
+  }
+  return h`<img src=${`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt=${sym} loading="lazy" onError=${() => setErr(true)} style=${{ width: size, height: size }} class="rounded-full bg-white p-[1.5px] object-contain border border-zinc-700 shrink-0"/>`;
+}
+
+function MediaLogo({ outlet, size = 16 }) {
+  const [err, setErr] = useState(false);
+  const info = outlet || MEDIA_OUTLETS[0];
+  useEffect(() => { setErr(false); }, [info.domain]);
+  if (err) {
+    return h`<span class="px-1 py-0.2 rounded bg-zinc-800 text-white font-black text-[9px]">${info.badge}</span>`;
+  }
+  return h`<img src=${`https://www.google.com/s2/favicons?domain=${info.domain}&sz=32`} alt=${info.name} loading="lazy" onError=${() => setErr(true)} style=${{ width: size, height: size }} class="rounded-sm bg-white p-[1px] object-contain shrink-0"/>`;
+}
+
+const SEC = {
+  CHP: ['NVDA', 'AMD', 'INTC', 'AVGO', 'OPAI', 'QCOM', 'TSM', 'ASML'],
+  BIG: ['MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'NFLX', 'CRM', 'ADBE'],
+  AUT: ['TSLA', 'TM', 'F', 'GM', 'RIVN'],
+  DEF: ['LMT', 'SPCX', 'BA', 'NOC', 'RTX'],
+  CON: ['JPM', 'KO', 'WMT', 'PFE', 'MCD', 'DIS', 'NKE', 'PEP', 'COST'],
+  ENE: ['XOM', 'CVX', 'GOLD', 'SPY', 'BTC', 'ETH', 'SOL', 'BNB'],
+  ETF: ['TQQQ', 'SQQQ', 'SOXL', 'SOXS']
+};
+const CR = ['BTC', 'ETH', 'SOL', 'BNB'];
+const DV = ['KO', 'WMT', 'MCD', 'PFE', 'JPM', 'XOM', 'INTC', 'PEP', 'COST', 'DIS', 'CVX', 'LMT'];
+const RV = {
+  NVDA: 'AMD', AMD: 'NVDA', INTC: 'AMD', AVGO: 'INTC', OPAI: 'GOOGL',
+  MSFT: 'GOOGL', GOOGL: 'MSFT', AAPL: 'MSFT', AMZN: 'MSFT', META: 'GOOGL',
+  TSLA: 'TM', TM: 'TSLA', RIVN: 'TSLA', LMT: 'BA', BA: 'LMT', SPCX: 'BA',
+  WMT: 'AMZN', KO: 'PEP', PEP: 'KO', NFLX: 'DIS', DIS: 'NFLX', XOM: 'CVX', CVX: 'XOM'
+};
+
+const AS = [
+  ['NVDA', 'NVIDIA Corp.', 'CHP', 162.85, 0.0068, 8900, 0.0012, 1.3, 24000],
+  ['AMD', 'Advanced Micro Devices', 'CHP', 534.06, 0.0065, 4700, 0.0018, 1.2, 1640],
+  ['INTC', 'Intel Corp.', 'CHP', 59.66, 0.0045, 25000, 0.002, 0.9, 4270],
+  ['AVGO', 'Broadcom Inc.', 'CHP', 347.01, 0.0052, 4300, 0.0018, 1.1, 4790],
+  ['OPAI', 'OpenAI Global', 'CHP', 403.20, 0.0075, 1900, 0.0025, 1.2, 3100],
+  ['QCOM', 'Qualcomm Inc.', 'CHP', 172.47, 0.005, 3800, 0.0015, 1.1, 1113],
+  ['TSM', 'Taiwan Semiconductor', 'CHP', 398.73, 0.0048, 5200, 0.0014, 1.15, 5140],
+  ['ASML', 'ASML Holding', 'CHP', 1495.16, 0.0055, 1800, 0.002, 1.25, 395],
+  ['MSFT', 'Microsoft Corp.', 'BIG', 523.88, 0.0035, 3600, 0.001, 0.95, 7440],
+  ['AAPL', 'Apple Inc.', 'BIG', 356.27, 0.0033, 6700, 0.001, 0.9, 14600],
+  ['GOOGL', 'Alphabet Inc.', 'BIG', 295.77, 0.0038, 7700, 0.0012, 1.0, 12170],
+  ['AMZN', 'Amazon.com Inc.', 'BIG', 266.66, 0.004, 7100, 0.0012, 1.05, 10800],
+  ['META', 'Meta Platforms', 'BIG', 641.69, 0.0048, 2000, 0.0018, 1.15, 2555],
+  ['NFLX', 'Netflix Inc.', 'BIG', 62.15, 0.006, 2400, 0.002, 1.2, 4260],
+  ['CRM', 'Salesforce Inc.', 'BIG', 217.84, 0.0045, 2900, 0.0016, 1.05, 955],
+  ['ADBE', 'Adobe Inc.', 'BIG', 243.08, 0.0046, 2100, 0.0017, 1.1, 432],
+  ['TSLA', 'Tesla Inc.', 'AUT', 390.22, 0.009, 3600, 0.002, 1.3, 3970],
+  ['TM', 'Toyota Motor Corp.', 'AUT', 194.50, 0.0028, 3200, 0.0018, 0.6, 1340],
+  ['F', 'Ford Motor Co.', 'AUT', 12.18, 0.004, 14000, 0.0015, 0.95, 3980],
+  ['GM', 'General Motors', 'AUT', 86.00, 0.0038, 8900, 0.0015, 1.0, 1100],
+  ['RIVN', 'Rivian Automotive', 'AUT', 12.18, 0.012, 6500, 0.003, 1.5, 1020],
+  ['LMT', 'Lockheed Martin', 'DEF', 596.04, 0.003, 1150, 0.002, 0.5, 238],
+  ['SPCX', 'SpaceX Corp.', 'DEF', 139.11, 0.0065, 3200, 0.0025, 0.9, 13500],
+  ['BA', 'Boeing Co.', 'DEF', 171.50, 0.0042, 3400, 0.002, 0.9, 750],
+  ['NOC', 'Northrop Grumman', 'DEF', 550.43, 0.0032, 980, 0.002, 0.55, 146],
+  ['RTX', 'RTX Corporation', 'DEF', 198.58, 0.0031, 2300, 0.0018, 0.6, 1330],
+  ['JPM', 'JPMorgan Chase', 'CON', 346.19, 0.0035, 4300, 0.0012, 0.95, 2820],
+  ['KO', 'The Coca-Cola Co.', 'CON', 99.25, 0.002, 13800, 0.0012, 0.3, 4310],
+  ['WMT', 'Walmart Inc.', 'CON', 128.09, 0.0022, 15000, 0.0012, 0.35, 8040],
+  ['PFE', 'Pfizer Inc.', 'CON', 28.89, 0.0028, 26800, 0.0018, 0.35, 5670],
+  ['MCD', 'McDonald’s Corp.', 'CON', 271.97, 0.0025, 2600, 0.0015, 0.4, 718],
+  ['DIS', 'Walt Disney Co.', 'CON', 118.97, 0.0041, 5100, 0.0018, 1.05, 1815],
+  ['NKE', 'Nike Inc.', 'CON', 37.99, 0.0039, 4900, 0.0017, 0.9, 1490],
+  ['PEP', 'PepsiCo Inc.', 'CON', 145.44, 0.0021, 4100, 0.0012, 0.32, 1375],
+  ['COST', 'Costco Wholesale', 'CON', 1106.21, 0.0026, 1900, 0.0018, 0.55, 443],
+  ['XOM', 'Exxon Mobil Corp.', 'ENE', 170.59, 0.0037, 7800, 0.0015, 0.6, 4410],
+  ['CVX', 'Chevron Corp.', 'ENE', 219.89, 0.0035, 5100, 0.0015, 0.62, 1820],
+  ['GOLD', 'Gold (Troy Ounce XAU)', 'ENE', 3881.75, 0.0034, 31600, 0.002, -0.1, 4500],
+  ['SPY', 'SPDR S&P 500 ETF', 'ENE', 754.37, 0.002, 5400, 0.0006, 1.0, 1800],
+  ['BTC', 'Bitcoin', 'ENE', 65443.00, 0.0115, 14, 0.004, 0.6, 19.9],
+  ['ETH', 'Ethereum', 'ENE', 1835.00, 0.0145, 230, 0.0045, 0.65, 120.4],
+  ['SOL', 'Solana', 'ENE', 72.30, 0.018, 850, 0.005, 0.75, 480],
+  ['BNB', 'BNB Chain', 'ENE', 595.81, 0.013, 420, 0.004, 0.7, 145],
+  ['TQQQ', 'ProShares UltraPro QQQ (3x Tech)', 'ETF', 57.68, 0.011, 9500, 0.0012, 3.0, 620],
+  ['SQQQ', 'ProShares UltraPro Short QQQ (-3x)', 'ETF', 42.46, 0.011, 14000, 0.0014, -3.0, 980],
+  ['SOXL', 'Direxion Daily Semis Bull (3x)', 'ETF', 58.32, 0.016, 8200, 0.0015, 3.3, 540],
+  ['SOXS', 'Direxion Daily Semis Bear (-3x)', 'ETF', 50.78, 0.016, 12500, 0.0016, -3.3, 890]
+];
+
+const BILLIONAIRES_100 = [
+  ['Elon Musk', '🇺🇸 USA', 883.0, [['SPCX', 0.62], ['TSLA', 0.28]]],
+  ['Jeff Bezos', '🇺🇸 USA', 375.0, [['AMZN', 0.80], ['SPCX', 0.08]]],
+  ['Larry Page', '🇺🇸 USA', 257.0, [['GOOGL', 0.85]]],
+  ['Sergey Brin', '🇺🇸 USA', 239.0, [['GOOGL', 0.85]]],
+  ['Mark Zuckerberg', '🇺🇸 USA', 228.0, [['META', 0.88]]],
+  ['Michael Dell', '🇺🇸 USA', 204.0, [['NVDA', 0.40], ['AVGO', 0.30], ['MSFT', 0.15]]],
+  ['Steve Ballmer', '🇺🇸 USA', 184.0, [['MSFT', 0.88]]],
+  ['Larry Ellison', '🇺🇸 USA', 168.0, [['MSFT', 0.45], ['NVDA', 0.25], ['TSLA', 0.12]]],
+  ['Warren Buffett', '🇺🇸 USA', 168.0, [['AAPL', 0.38], ['JPM', 0.25], ['KO', 0.15], ['CVX', 0.10]]],
+  ['Jim Walton', '🇺🇸 USA', 155.0, [['WMT', 0.88]]],
+  ['Rob Walton', '🇺🇸 USA', 152.0, [['WMT', 0.88]]],
+  ['Alice Walton', '🇺🇸 USA', 151.0, [['WMT', 0.88]]],
+  ['Amancio Ortega', '🇪🇸 Spain', 137.0, [['NKE', 0.35], ['WMT', 0.25], ['COST', 0.20]]],
+  ['Jensen Huang', '🇺🇸 USA', 136.0, [['NVDA', 0.92]]],
+  ['Bernard Arnault', '🇫🇷 France', 135.0, [['NKE', 0.30], ['DIS', 0.25], ['GOLD', 0.20]]],
+  ['Carlos Slim', '🇲🇽 Mexico', 131.0, [['JPM', 0.30], ['XOM', 0.25], ['WMT', 0.20]]],
+  ['Bill Gates', '🇺🇸 USA', 123.0, [['MSFT', 0.48], ['WMT', 0.15], ['COST', 0.12]]],
+  ['Gautam Adani', '🇮🇳 India', 117.0, [['XOM', 0.35], ['BA', 0.20], ['SPY', 0.20]]],
+  ['Françoise Bettencourt Meyers', '🇫🇷 France', 106.0, [['KO', 0.30], ['PEP', 0.25], ['NKE', 0.20]]],
+  ['Zhang Yiming', '🇨🇳 China', 105.0, [['META', 0.55], ['NFLX', 0.25]]],
+  ['Thomas Peterffy', '🇺🇸 USA', 96.8, [['JPM', 0.55], ['SPY', 0.30]]],
+  ['Jeff Yass', '🇺🇸 USA', 91.5, [['META', 0.40], ['NVDA', 0.30], ['SPY', 0.20]]],
+  ['Mukesh Ambani', '🇮🇳 India', 88.8, [['XOM', 0.40], ['CVX', 0.20], ['META', 0.15]]],
+  ['Julia Flesher Koch & family', '🇺🇸 USA', 80.1, [['XOM', 0.45], ['CVX', 0.25]]],
+  ['Germán Larrea & family', '🇲🇽 Mexico', 73.5, [['GOLD', 0.55], ['XOM', 0.25]]],
+  ['Tadashi Yanai', '🇯🇵 Japan', 72.8, [['NKE', 0.50], ['TM', 0.20]]],
+  ['Charles Koch', '🇺🇸 USA', 71.9, [['XOM', 0.45], ['CVX', 0.25]]],
+  ['Changpeng Zhao', '🇨🇦 Canada', 68.7, [['BNB', 0.65], ['BTC', 0.25]]],
+  ['Zhong Shanshan', '🇨🇳 China', 65.9, [['KO', 0.55], ['PEP', 0.25]]],
+  ['Eric Schmidt', '🇺🇸 USA', 61.1, [['GOOGL', 0.65], ['OPAI', 0.15]]],
+  ['Ken Griffin', '🇺🇸 USA', 57.5, [['NVDA', 0.25], ['JPM', 0.30], ['SPY', 0.30]]],
+  ['Giovanni Ferrero & family', '🇮🇹 Italy', 55.2, [['PEP', 0.40], ['KO', 0.30], ['MCD', 0.15]]],
+  ['Giancarlo Devasini', '🇮🇹 Italy', 55.0, [['BTC', 0.60], ['ETH', 0.25]]],
+  ['Lukas Walton', '🇺🇸 USA', 53.4, [['WMT', 0.78]]],
+  ['Abigail Johnson', '🇺🇸 USA', 50.9, [['JPM', 0.50], ['BTC', 0.15], ['SPY', 0.25]]],
+  ['Iris Fontbona & family', '🇨🇱 Chile', 49.7, [['GOLD', 0.50], ['TSLA', 0.20]]],
+  ['Gianluigi Aponte', '🇮🇹 Italy', 49.6, [['XOM', 0.35], ['BA', 0.25], ['WMT', 0.20]]],
+  ['Jacqueline Badger Mars', '🇺🇸 USA', 49.3, [['PEP', 0.45], ['MCD', 0.25]]],
+  ['John Mars', '🇺🇸 USA', 49.3, [['PEP', 0.45], ['MCD', 0.25]]],
+  ['Stephen Schwarzman', '🇺🇸 USA', 47.7, [['JPM', 0.55], ['SPY', 0.25]]],
+  ['Ma Huateng', '🇨🇳 China', 47.3, [['META', 0.45], ['NFLX', 0.25], ['NVDA', 0.15]]],
+  ['Dieter Schwarz', '🇩🇪 Germany', 47.0, [['WMT', 0.55], ['COST', 0.30]]],
+  ['Rodolphe Saadé & family', '🇫🇷 France', 46.7, [['AMZN', 0.35], ['XOM', 0.25], ['BA', 0.20]]],
+  ['Li Ka-shing', '🇭🇰 Hong Kong', 46.6, [['JPM', 0.35], ['WMT', 0.25], ['XOM', 0.20]]],
+  ['He Xiangjian', '🇨🇳 China', 46.3, [['WMT', 0.40], ['COST', 0.30]]],
+  ['Alain Wertheimer', '🇫🇷 France', 45.4, [['NKE', 0.35], ['GOLD', 0.30]]],
+  ['Gerard Wertheimer', '🇫🇷 France', 45.4, [['NKE', 0.35], ['GOLD', 0.30]]],
+  ['Thomas Frist', '🇺🇸 USA', 44.3, [['PFE', 0.60], ['JPM', 0.20]]],
+  ['Andy Bechtolsheim', '🇩🇪 Germany', 42.8, [['NVDA', 0.55], ['AVGO', 0.25]]],
+  ['William Ding', '🇨🇳 China', 40.6, [['NFLX', 0.45], ['NVDA', 0.25]]],
+  ['Len Blavatnik', '🇬🇧 UK', 40.6, [['NFLX', 0.35], ['XOM', 0.30]]],
+  ['Robert Pera', '🇺🇸 USA', 40.2, [['QCOM', 0.50], ['AVGO', 0.25]]],
+  ['Zeng Yuqun', '🇭🇰 Hong Kong', 40.2, [['TSLA', 0.60], ['RIVN', 0.15]]],
+  ['Jack Ma', '🇨🇳 China', 40.1, [['AMZN', 0.50], ['JPM', 0.20]]],
+  ['Aliko Dangote', '🇳🇬 Nigeria', 39.9, [['XOM', 0.45], ['GOLD', 0.25]]],
+  ['Miriam Adelson & family', '🇺🇸 USA', 39.4, [['DIS', 0.45], ['MCD', 0.25]]],
+  ['Jaime Gilinski', '🇨🇴 Colombia', 39.4, [['JPM', 0.55], ['SPY', 0.25]]],
+  ['Liang Wenfeng', '🇨🇳 China', 37.9, [['NVDA', 0.50], ['OPAI', 0.30]]],
+  ['Lakshmi Mittal', '🇮🇳 India', 37.6, [['GM', 0.35], ['BA', 0.25]]],
+  ['MacKenzie Scott', '🇺🇸 USA', 37.2, [['AMZN', 0.80]]],
+  ['Ernesto Bertarelli & family', '🇨🇭 Switzerland', 37.0, [['PFE', 0.65], ['GOLD', 0.15]]],
+  ['Shiv Nadar', '🇮🇳 India', 36.0, [['MSFT', 0.45], ['CRM', 0.30]]],
+  ['Eduardo Saverin', '🇧🇷 Brazil', 35.0, [['META', 0.78]]],
+  ['Savitri Jindal', '🇮🇳 India', 34.6, [['XOM', 0.35], ['GOLD', 0.30]]],
+  ['Pham Nhat Vuong', '🇻🇳 Vietnam', 33.9, [['RIVN', 0.45], ['TSLA', 0.25]]],
+  ['Izzy Englander', '🇺🇸 USA', 33.8, [['SPY', 0.45], ['JPM', 0.30]]],
+  ['Zhang Bo & family', '🇨🇳 China', 32.9, [['GOLD', 0.40], ['TSLA', 0.25]]],
+  ['Shapoor Mistry & family', '🇮🇳 India', 32.6, [['JPM', 0.40], ['COST', 0.25]]],
+  ['Henry Samueli', '🇺🇸 USA', 32.1, [['AVGO', 0.80]]],
+  ['Eyal Ofer', '🇮🇱 Israel', 31.9, [['XOM', 0.35], ['JPM', 0.35]]],
+  ['Sunil Mittal & family', '🇮🇳 India', 31.7, [['QCOM', 0.45], ['AAPL', 0.25]]],
+  ['Jorge Paulo Lemann', '🇧🇷 Brazil', 31.1, [['KO', 0.45], ['MCD', 0.30]]],
+  ['Idan Ofer', '🇮🇱 Israel', 30.6, [['XOM', 0.45], ['CVX', 0.25]]],
+  ['Dan Gilbert', '🇺🇸 USA', 30.5, [['JPM', 0.55], ['MSFT', 0.20]]],
+  ['Gina Rinehart', '🇦🇺 Australia', 30.4, [['GOLD', 0.55], ['XOM', 0.25]]],
+  ['Masayoshi Son', '🇯🇵 Japan', 30.4, [['NVDA', 0.40], ['OPAI', 0.35], ['QCOM', 0.15]]],
+  ['Nik Storonsky', '🇬🇧 UK', 29.7, [['JPM', 0.40], ['BTC', 0.30], ['SOL', 0.15]]],
+  ['Mark Mateschitz', '🇦🇹 Austria', 29.4, [['KO', 0.40], ['PEP', 0.35]]],
+  ['Stan Kroenke', '🇺🇸 USA', 29.3, [['WMT', 0.45], ['DIS', 0.25]]],
+  ['Dilip Shanghvi', '🇮🇳 India', 29.2, [['PFE', 0.70]]],
+  ['Takemitsu Takizaki', '🇯🇵 Japan', 28.7, [['ASML', 0.45], ['TSM', 0.30]]],
+  ['Colin Huang', '🇨🇳 China', 28.0, [['AMZN', 0.60], ['WMT', 0.20]]],
+  ['David Tepper', '🇺🇸 USA', 27.9, [['NVDA', 0.30], ['AMZN', 0.25], ['META', 0.20]]],
+  ['Henry Cheng', '🇭🇰 Hong Kong', 27.6, [['GOLD', 0.40], ['JPM', 0.30]]],
+  ['Susanne Klatten', '🇩🇪 Germany', 27.5, [['TM', 0.45], ['GM', 0.25]]],
+  ['Alexey Mordashov', '🇷🇺 Russia', 27.4, [['GOLD', 0.45], ['XOM', 0.30]]],
+  ['Lei Jun', '🇨🇳 China', 27.0, [['QCOM', 0.35], ['TSLA', 0.35], ['AAPL', 0.15]]],
+  ['Elaine Marshall', '🇺🇸 USA', 26.5, [['XOM', 0.45], ['CVX', 0.25]]],
+  ['Ernie Garcia II', '🇺🇸 USA', 26.3, [['F', 0.40], ['GM', 0.35]]],
+  ['Azim Premji', '🇮🇳 India', 26.3, [['MSFT', 0.45], ['CRM', 0.25]]],
+  ['Alwaleed Bin Talal', '🇸🇦 Saudi Arabia', 26.0, [['XOM', 0.30], ['JPM', 0.30], ['DIS', 0.20]]],
+  ['Peter Thiel', '🇺🇸 USA', 26.0, [['SPCX', 0.35], ['META', 0.25], ['BTC', 0.20]]],
+  ['Philip Anschutz', '🇺🇸 USA', 25.9, [['XOM', 0.40], ['DIS', 0.25]]],
+  ['Lyndal Stephens Greth & family', '🇺🇸 USA', 25.7, [['XOM', 0.50], ['CVX', 0.30]]],
+  ['Greg Brockman', '🇺🇸 USA', 25.5, [['OPAI', 0.80], ['NVDA', 0.10]]],
+  ['Vicky Safra & family', '🇧🇷 Brazil', 25.0, [['JPM', 0.55], ['GOLD', 0.20]]],
+  ['Arthur Dantchik', '🇺🇸 USA', 25.0, [['META', 0.40], ['SPY', 0.35]]],
+  ['Christy Walton', '🇺🇸 USA', 24.6, [['WMT', 0.80]]],
+  ['Jay Y. Lee', '🇰🇷 South Korea', 24.2, [['TSM', 0.45], ['QCOM', 0.25], ['AAPL', 0.15]]],
+  ['Stefan Persson', '🇸🇪 Sweden', 23.9, [['NKE', 0.55], ['WMT', 0.20]]]
+];
+
+const NW = [
+  {
+    outletIdx: 0,
+    h: 'URGENTE: Reserva Federal sube tasas 50 pbs ante repunte inflacionario y frena recortes en 2027',
+    h_en: 'BREAKING: Federal Reserve hikes rates by 50 bps amid inflation rebound, pauses 2027 cuts',
+    b: 'El Comité Federal de Mercado Abierto endurece su política monetaria tras datos de precios subyacentes superiores al consenso de Wall Street.',
+    b_en: 'The Federal Open Market Committee tightens monetary policy following core price data exceeding Wall Street consensus.',
+    w: 'El encarecimiento del costo del capital comprime los múltiplos de valoración tecnológica y cripto, mientras expande el margen neto de intereses bancarios.',
+    w_en: 'Higher cost of capital compresses tech and crypto valuation multiples while expanding net interest margins for banks.',
+    cat: 'POLÍTICA MONETARIA',
+    cat_en: 'MONETARY POLICY',
+    author: 'Elena Vance · Mesa Macro Washington',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Tasa Fed Funds', val: '4.75% (+50 pbs)', tone: 'neg' },
+      { label: 'Bono Tesoro 10A', val: '4.58% (+14 pbs)', tone: 'neg' },
+      { label: 'Flujo Institucional', val: 'Rotación a Banca', tone: 'neu' }
+    ],
+    quote: {
+      text: '“La estabilidad de precios sigue siendo nuestra prioridad absoluta; no dudaremos en mantener las condiciones financieras restrictivas hasta confirmar una convergencia sostenible al 2%.”',
+      by: 'Comunicado Oficial del Comité Federal de Mercado Abierto (FOMC)'
+    },
+    article: [
+      'WASHINGTON — En una decisión que tomó por sorpresa a los operadores de futuros de tasas y desks de renta fija, la Reserva Federal anunció un incremento de 50 puntos básicos en los tipos de referencia, situando el costo del dinero en su nivel más restrictivo del ciclo actual.',
+      'Los últimos informes laborales y el índice de precios al consumidor subyacente (PCE Core) mostraron presiones salariales persistentes en el sector servicios, sumadas a costos energéticos y logísticos elevados que comienzan a trasladarse nuevamente a las cadenas de suministro industriales.',
+      'Durante la rueda de prensa posterior al anuncio, las autoridades monetarias subrayaron que el mercado laboral estadounidense mantiene una rigidez superior a la proyectada, lo que obliga a enfriar la demanda agregada antes de considerar cualquier flexibilización en el primer semestre de 2027.',
+      'En los parqués institucionales, los algoritmos cuantitativos descontaron inmediatamente tasas de descuento más altas en los modelos de flujo de caja descontado (DCF), provocando una liquidación rápida en semiconductores, inteligencia artificial y criptomonedas, mientras entidades financieras como JPMorgan Chase capturaron fuertes compras por expansión en sus márgenes de intermediación.'
+    ],
+    sg: [['CHP', -1.2], ['BIG', -0.8], ['AUT', -0.9], ['BTC', -1.1], ['ETH', -1.2], ['SOL', -1.4], ['SPY', -0.6], ['JPM', 0.7]]
+  },
+  {
+    outletIdx: 2,
+    h: 'Reserva Federal inicia recorte de tasas de 25 pbs e inyecta liquidez al mercado',
+    h_en: 'Federal Reserve initiates 25 bps rate cut and injects liquidity into global markets',
+    b: 'El banco central abre la puerta a un ciclo gradual de flexibilización monetaria tras estabilizarse las expectativas de inflación.',
+    b_en: 'The central bank opens the door to a gradual easing cycle after inflation expectations stabilize.',
+    w: 'La reducción en el costo del financiamiento favorece el apetito por el riesgo en acciones tecnológicas de alto crecimiento y activos digitales.',
+    w_en: 'Lower financing costs boost risk appetite across high-growth tech equities and digital assets.',
+    cat: 'POLÍTICA MONETARIA',
+    cat_en: 'MONETARY POLICY',
+    author: 'Jonathan Thorne · Corresponsal de Bancos Centrales',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Recorte Aplicado', val: '-25 pbs', tone: 'pos' },
+      { label: 'Índice Dólar (DXY)', val: '-0.85%', tone: 'pos' },
+      { label: 'Apetito de Riesgo', val: 'Alto (Risk-On)', tone: 'pos' }
+    ],
+    quote: {
+      text: '“Los riesgos entre el pleno empleo y el control inflacionario han alcanzado un equilibrio que permite recalibrar gradualmente nuestra postura monetaria.”',
+      by: 'Minutas de Política Monetaria · Reserva Federal'
+    },
+    article: [
+      'NUEVA YORK — La Reserva Federal recortó hoy su tasa de interés de referencia en 25 puntos básicos, marcando un punto de inflexión esperado durante meses por los gestores de fondos globales, fondos de cobertura y tesorerías corporativas.',
+      'El movimiento responde a una desaceleración ordenada en el crédito corporativo de mediano tamaño y a la normalización de los indicadores de precios mayoristas durante los últimos dos trimestres, sin deteriorar la tasa de desempleo.',
+      'Los analistas de renta variable destacan que una curva de rendimientos menos invertida reduce el costo de refinanciamiento de deuda para empresas intensivas en capital de desarrollo tecnológico.',
+      'Como reacción inmediata, los flujos institucionales giraron con fuerza hacia el sector de semiconductores, Big Tech y el ecosistema cripto, impulsando compras agresivas en Bitcoin, Ethereum, Solana y líderes de infraestructura de inteligencia artificial.'
+    ],
+    sg: [['CHP', 1.1], ['BIG', 0.8], ['AUT', 0.8], ['BTC', 1.1], ['ETH', 1.2], ['SOL', 1.3], ['SPY', 0.6], ['JPM', -0.4]]
+  },
+  {
+    outletIdx: 0,
+    h: 'NVIDIA ajusta guía trimestral por cuellos de botella en empaquetado avanzado de servidores',
+    h_en: 'NVIDIA trims quarterly guidance amid advanced server packaging bottlenecks',
+    b: 'Hiperescaladores reprograman entregas de clústeres de nueva generación hacia el próximo trimestre por restricciones térmicas.',
+    b_en: 'Hyperscalers reschedule next-gen cluster deliveries to next quarter due to thermal constraints.',
+    w: 'El retraso temporal en entregas abre espacio competitivo para que AMD capture pedidos urgentes de inferencia en la nube.',
+    w_en: 'Temporary delivery delays create competitive headroom for AMD to capture urgent cloud inference orders.',
+    cat: 'SEMICONDUCTORES & IA',
+    cat_en: 'SEMICONDUCTORS & AI',
+    author: 'Marcus Chen · Mesa Tecnológica Silicon Valley',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Desplazamiento Guía', val: '-$2.8B Trim.', tone: 'neg' },
+      { label: 'Cuota Inferencia AMD', val: '+3.4% Est.', tone: 'pos' },
+      { label: 'Demanda Backlogs', val: 'Sin cancelaciones', tone: 'neu' }
+    ],
+    quote: {
+      text: '“La demanda de cómputo sigue superando ampliamente nuestra capacidad instalada; el ajuste responde exclusivamente a tiempos de validación en refrigeración líquida de alta densidad.”',
+      by: 'Dirección de Operaciones de Cadena de Suministro'
+    },
+    article: [
+      'SANTA CLARA — NVIDIA publicó una actualización operativa de su guía de ingresos trimestrales señalando un desplazamiento de entregas por restricciones técnicas en el ensamblaje y empaquetado CoWoS de racks de alta densidad energética.',
+      'La complejidad térmica y de interconexión óptica de los nuevos sistemas de última generación obligó a varios proveedores de nube de hiperescala a posponer la recepción física de servidores hasta el cierre del siguiente periodo fiscal.',
+      'Aunque la compañía enfatizó que no existen cancelaciones de pedidos sino un diferimiento contable en el reconocimiento de ingresos, el mercado reaccionó ajustando posiciones de corto plazo dado el elevado múltiplo al que cotizaba el valor.',
+      'Los fondos cuantitativos ejecutaron toma de beneficios en NVIDIA y sus socios de litografía como TSMC y ASML, redirigiendo exposición táctica hacia AMD como proveedor alternativo inmediato.'
+    ],
+    sg: [['NVDA', -1.8], ['AMD', 1.1], ['TSM', -0.8], ['ASML', -0.6]]
+  },
+  {
+    outletIdx: 4,
+    h: 'AMD presenta arquitectura MI400 con salto del 35 % en eficiencia energética por vatio',
+    h_en: 'AMD unveils MI400 architecture boasting 35% leap in power efficiency per watt',
+    b: 'Pruebas independientes en cargas de inferencia masiva confirman reducción drástica en el costo operativo de centros de datos.',
+    b_en: 'Independent benchmarks in massive inference workloads confirm sharp reduction in data center operating costs.',
+    w: 'Fortalece la posición competitiva de AMD frente a NVIDIA e Intel en contratos empresariales de inteligencia artificial.',
+    w_en: 'Strengthens AMD competitive footing against NVIDIA and Intel in enterprise AI contracts.',
+    cat: 'SEMICONDUCTORES & IA',
+    cat_en: 'SEMICONDUCTORS & AI',
+    author: 'Marcus Chen · Mesa Tecnológica Silicon Valley',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Eficiencia / Vatio', val: '+35.0%', tone: 'pos' },
+      { label: 'Costo Total (TCO)', val: '-22% vs Gen Ant.', tone: 'pos' },
+      { label: 'Contratos Cloud', val: '4 Hiperescaladores', tone: 'pos' }
+    ],
+    quote: {
+      text: '“El verdadero cuello de botella de la inteligencia artificial ya no es solo el silicio, sino la electricidad disponible en la red; ahí es donde MI400 cambia las reglas del juego.”',
+      by: 'Presentación Técnica · Cumbre de Infraestructura IA'
+    },
+    article: [
+      'AUSTIN — AMD reveló los resultados auditados de rendimiento de su nueva generación de aceleradores MI400, diseñados específicamente para reducir el consumo energético y la huella térmica en centros de datos de hiperescala.',
+      'La arquitectura modular de chiplets de cuarta generación elimina los cuellos de botella de transferencia de memoria de alto ancho de banda (HBM) durante el despliegue de modelos multimodales de billones de parámetros.',
+      'Durante la demostración en vivo, cuatro de los mayores operadores de nube confirmaron acuerdos plurianuales de despliegue para cargas de trabajo de inferencia empresarial a gran escala.',
+      'Varias firmas de inversión en Wall Street elevaron sus estimaciones de cuota de mercado y márgenes brutos para AMD rumbo a 2027, desencadenando una fuerte ola compradora sobre el título.'
+    ],
+    sg: [['AMD', 1.6], ['NVDA', -0.8], ['INTC', -0.7]]
+  },
+  {
+    outletIdx: 1,
+    h: 'Intel reporta retrasos en la tasa de rendimiento de su nodo de fundición 18A',
+    h_en: 'Intel reports yield rate delays on its flagship 18A foundry node',
+    b: 'Los costos de calibración litográfica obligan a posponer la producción comercial en volumen para clientes externos.',
+    b_en: 'Lithography calibration costs force postponement of high-volume commercial production for external clients.',
+    w: 'TSMC consolida su liderazgo global en manufactura avanzada mientras Intel enfrenta presión sobre su flujo de caja libre.',
+    w_en: 'TSMC cements global lead in advanced manufacturing while Intel faces free cash flow pressure.',
+    cat: 'INDUSTRIA DE CHIPS',
+    cat_en: 'CHIP INDUSTRY',
+    author: 'Kenji Sato · Corresponsal Asia-Pacífico',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Calendario 18A', val: '+1 Trimestre', tone: 'neg' },
+      { label: 'Cuota TSMC Avanzado', val: '91.5%', tone: 'pos' },
+      { label: 'Capex Fundición', val: '$24.0B Anual', tone: 'neg' }
+    ],
+    quote: {
+      text: '“Los diseñadores fabless exigen tasas de defectos mínimas antes de comprometer volúmenes críticos de obleas; cualquier desviación beneficia directamente a Taiwán.”',
+      by: 'Informe Sectorial de Semiconductores · Taipei'
+    },
+    article: [
+      'HILLSBORO — Intel informó a los inversores institucionales que la rampa de producción masiva de su proceso de manufactura 18A sufrirá un ajuste de calendario tras detectarse variaciones en los rendimientos (yields) durante las corridas piloto de obleas.',
+      'El desarrollo simultáneo de transistores Gate-All-Around y entrega de energía trasera ha elevado los costos de calibración en sus plantas de Oregón y Arizona, presionando el flujo de caja libre de la división de fundición.',
+      'Los grandes diseñadores de chips sin fábricas propias exigen consistencia industrial probada antes de migrar pedidos críticos fuera de Asia.',
+      'Como consecuencia directa, Taiwan Semiconductor (TSMC) consolida su hegemonía global en nodos sub-2 nanómetros, atrayendo nuevos flujos compradores junto a AMD.'
+    ],
+    sg: [['INTC', -1.5], ['TSM', 0.8], ['AMD', 0.6]]
+  },
+  {
+    outletIdx: 3,
+    h: 'OpenAI lanza agente autónomo de ingeniería y ciencia de 5ª generación con razonamiento continuo',
+    h_en: 'OpenAI launches 5th-gen autonomous engineering & science agent with continuous reasoning',
+    b: 'El sistema demuestra capacidad para ejecutar proyectos complejos de arquitectura de software y simulación científica sin supervisión.',
+    b_en: 'System demonstrates ability to execute complex software architecture and scientific simulations unsupervised.',
+    w: 'Dispara la demanda de cómputo en Microsoft Azure y hardware de IA, mientras presiona el negocio tradicional de búsqueda.',
+    w_en: 'Surges compute demand on Microsoft Azure and AI hardware while pressuring legacy search business.',
+    cat: 'INTELIGENCIA ARTIFICIAL',
+    cat_en: 'ARTIFICIAL INTELLIGENCE',
+    author: 'Sarah Jenkins · Redacción San Francisco',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Valoración Privada', val: '$1.25 Trillones', tone: 'pos' },
+      { label: 'Consumo Cómputo', val: '+180% Azure', tone: 'pos' },
+      { label: 'Adopción Fortune 500', val: '78% Activa', tone: 'pos' }
+    ],
+    quote: {
+      text: '“Estamos pasando de herramientas que responden preguntas a agentes persistentes capaces de investigar, verificar hipótesis y desplegar sistemas completos en producción.”',
+      by: 'Nota Técnica · Equipo de Investigación OpenAI'
+    },
+    article: [
+      'SAN FRANCISCO — OpenAI presentó oficialmente su nuevo sistema de razonamiento autónomo de quinta generación, capaz de planificar, escribir, auditar y desplegar infraestructuras completas de software y modelado científico de forma autónoma.',
+      'Nuevas técnicas de aprendizaje por refuerzo en tiempo de inferencia permiten al modelo verificar cada paso lógico y corregir errores complejos que anteriormente requerían equipos enteros de ingenieros senior.',
+      'El lanzamiento incluye contratos empresariales de ejecución continua que multiplican por tres el consumo de tokens y capacidad de cómputo en los centros de datos de Microsoft Azure.',
+      'Los títulos vinculados a OpenAI, Microsoft y NVIDIA repuntaron con fuerza ante la explosión en la demanda de infraestructura, mientras Alphabet enfrentó presión competitiva en su segmento de búsqueda corporativa.'
+    ],
+    sg: [['OPAI', 1.8], ['MSFT', 0.8], ['NVDA', 0.6], ['GOOGL', -0.9]]
+  },
+  {
+    outletIdx: 0,
+    h: 'Apple supera los 2.400 millones de dispositivos activos y dispara ingresos de servicios',
+    h_en: 'Apple surpasses 2.4 billion active devices as services revenue surges',
+    b: 'La integración de IA local en el silicio propio impulsa el mayor ciclo de renovación de hardware en cuatro años.',
+    b_en: 'On-device AI integration in custom silicon drives largest hardware upgrade cycle in four years.',
+    w: 'La expansión de márgenes brutos en servicios impulsa tanto a Apple como a su cadena global de proveedores de semiconductores.',
+    w_en: 'Gross margin expansion in services lifts both Apple and its global semiconductor supply chain.',
+    cat: 'BIG TECH & CONSUMO',
+    cat_en: 'BIG TECH & CONSUMER',
+    author: 'Sarah Jenkins · Redacción San Francisco',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Base Instalada', val: '2.42B Equipos', tone: 'pos' },
+      { label: 'Margen Servicios', val: '74.2% Bruto', tone: 'pos' },
+      { label: 'Crecimiento Renovac.', val: '+19% Interanual', tone: 'pos' }
+    ],
+    quote: {
+      text: '“La privacidad combinada con ejecución neuronal directa en el dispositivo ha convertido la actualización de hardware en una necesidad operativa para millones de usuarios.”',
+      by: 'Reporte Trimestral de Operaciones · Cupertino'
+    },
+    article: [
+      'CUPERTINO — Apple reportó cifras operativas sin precedentes al superar los 2.400 millones de dispositivos activos en todo el mundo, impulsado por una aceleración global en las tasas de renovación.',
+      'La adopción masiva de modelos de inteligencia artificial ejecutados localmente en el silicio propietario de la compañía generó un efecto arrastre sobre las suscripciones recurrentes en la nube y servicios financieros.',
+      'El margen bruto consolidado alcanzó un nuevo récord histórico, permitiendo a la directiva anunciar una ampliación en su programa de recompra de acciones.',
+      'Proveedores estratégicos de conectividad, radiofrecuencia y manufactura como Qualcomm, Broadcom y TSMC acompañaron las alzas en la sesión.'
+    ],
+    sg: [['AAPL', 1.4], ['QCOM', 0.5], ['AVGO', 0.5], ['TSM', 0.4]]
+  },
+  {
+    outletIdx: 4,
+    h: 'Tesla inicia despliegue comercial de flota Robotaxi y producción en serie de Optimus',
+    h_en: 'Tesla initiates commercial Robotaxi fleet rollout and mass production of Optimus',
+    b: 'La compañía proyecta márgenes brutos superiores al 40 % derivados del software autónomo y robótica industrial.',
+    b_en: 'Company projects gross margins above 40% driven by autonomous software and industrial robotics.',
+    w: 'Los inversores revalorizan a Tesla como plataforma de IA física, ampliando la brecha frente a fabricantes tradicionales.',
+    w_en: 'Investors re-rate Tesla as a physical AI platform, widening the gap over legacy automakers.',
+    cat: 'AUTO & ROBÓTICA',
+    cat_en: 'AUTO & ROBOTICS',
+    author: 'Carlos Mendoza · Mesa Industrial & Movilidad',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Margen Software FSD', val: '> 42% Proyect.', tone: 'pos' },
+      { label: 'Unidades Optimus', val: '25,000 / Año', tone: 'pos' },
+      { label: 'Costo por Milla', val: '$0.28 Autónomo', tone: 'pos' }
+    ],
+    quote: {
+      text: '“Cada vehículo conectado a la red autónoma y cada unidad humanoide en planta representa un activo generador de flujo recurrente de alto margen.”',
+      by: 'Actualización Estratégica · Gigafactory Austin'
+    },
+    article: [
+      'AUSTIN — Tesla puso en operación comercial sus primeras flotas de transporte autónomo sin conductor en tres áreas metropolitanas clave y confirmó el inicio de entregas industriales externas del robot humanoide Optimus.',
+      'La transición desde márgenes puramente manufactureros hacia ingresos recurrentes por kilómetro autónomo y licencias de robótica transforma radicalmente el perfil de rentabilidad de la empresa.',
+      'Los analistas institucionales destacaron que la escala de datos reales acumulados por su red neuronal otorga una ventaja difícil de replicar en el corto plazo.',
+      'Los fondos de crecimiento aplaudieron el anuncio con compras masivas en Tesla, mientras fabricantes tradicionales como Toyota, GM y Ford retrocedieron.'
+    ],
+    sg: [['TSLA', 1.9], ['TM', -0.5], ['GM', -0.4], ['F', -0.4]]
+  },
+  {
+    outletIdx: 3,
+    h: 'SpaceX logra reutilización orbital completa en menos de 4 horas y desploma costos de carga',
+    h_en: 'SpaceX achieves full orbital turnaround in under 4 hours, slashing payload costs',
+    b: 'El nuevo récord operativo consolida su dominio absoluto en lanzamientos comerciales, defensa y constelaciones satelitales.',
+    b_en: 'Operational record cements dominance across commercial launches, defense, and satellite constellations.',
+    w: 'La caída histórica en el costo por kilogramo puesto en órbita presiona a los contratistas aeroespaciales tradicionales.',
+    w_en: 'Historic drop in cost per kilogram to orbit pressures legacy aerospace contractors.',
+    cat: 'ESPACIO & TECNOLOGÍA',
+    cat_en: 'SPACE & TECHNOLOGY',
+    author: 'Robert Sterling · Mesa de Defensa Washington',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Tiempo Reutilización', val: '3h 48m Récord', tone: 'pos' },
+      { label: 'Costo / Kg Órbita', val: '-68% Interanual', tone: 'pos' },
+      { label: 'Capitalización Nasdaq', val: '$1.88 Trillones', tone: 'pos' }
+    ],
+    quote: {
+      text: '“La cadencia de lanzamiento diaria convierte el acceso al espacio en una operación logística rutinaria similar a la aviación comercial de carga.”',
+      by: 'Centro de Control Orbital · Starbase'
+    },
+    article: [
+      'BOCA CHICA — SpaceX completó con éxito el aterrizaje, inspección automatizada, recarga de propelentes y relanzamiento orbital de su vehículo pesado en menos de cuatro horas.',
+      'Esta eficiencia operativa reduce el costo marginal de acceso a la órbita terrestre baja a una fracción mínima de lo que cobran los contratistas aeroespaciales heredados.',
+      'Tras su histórica salida a bolsa en el Nasdaq en 2026, el mercado valora cada vez más los flujos recurrentes de conectividad satelital global y contratos gubernamentales.',
+      'La cotización de SpaceX (SPCX) se disparó con fuerte volumen institucional, mientras Boeing y RTX enfrentaron ajustes.'
+    ],
+    sg: [['SPCX', 1.7], ['BA', -0.7], ['RTX', -0.3]]
+  },
+  {
+    outletIdx: 2,
+    h: 'Tensión geopolítica dispara demanda de refugio en Oro (XAU), energía y sector defensa',
+    h_en: 'Geopolitical tensions trigger safe-haven rush into Gold (XAU), energy, and defense',
+    b: 'La escalada en rutas marítimas estratégicas eleva las primas de seguros y el riesgo en materias primas globales.',
+    b_en: 'Escalation along strategic maritime routes elevates insurance premiums and global commodity risk.',
+    w: 'La aversión al riesgo impulsa la onza de oro hacia máximos históricos y fortalece a petroleras y contratistas de defensa.',
+    w_en: 'Risk aversion pushes gold ounces toward all-time highs while lifting oil majors and defense contractors.',
+    cat: 'GEOPOLÍTICA & COMMODITIES',
+    cat_en: 'GEOPOLITICS & COMMODITIES',
+    author: 'Elena Vance · Mesa Global Londres',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Oro Spot (XAU)', val: '$3,920+ / oz', tone: 'pos' },
+      { label: 'Prima Riesgo Crudo', val: '+$6.40 / bbl', tone: 'pos' },
+      { label: 'Índice Volatilidad', val: '+18.5%', tone: 'neg' }
+    ],
+    quote: {
+      text: '“Ante la incertidumbre en corredores energéticos críticos, los bancos centrales y gestores soberanos priorizan liquidez física en oro y cobertura energética.”',
+      by: 'Estrategia de Materias Primas · City de Londres'
+    },
+    article: [
+      'LONDRES — El aumento de incidentes navales y restricciones de tránsito en corredores marítimos críticos desencadenó una inmediata búsqueda de activos refugio en las mesas globales.',
+      'Los bancos centrales de mercados emergentes y fondos macro sistemáticos incrementaron sus compras de oro físico y futuros de crudo para cubrir posibles interrupciones de suministro.',
+      'Paralelamente, los presupuestos de defensa y sistemas antimisiles registraron revisiones al alza en Europa y Norteamérica.',
+      'El oro (XAU) repuntó con fuerza junto a ExxonMobil, Chevron, Lockheed Martin y Northrop Grumman, mientras el índice S&P 500 cedió terreno.'
+    ],
+    sg: [['DEF', 1.1], ['GOLD', 1.3], ['XOM', 0.9], ['CVX', 0.8], ['SPY', -0.6]]
+  },
+  {
+    outletIdx: 0,
+    h: 'Fondos soberanos y banca privada elevan al 2 % su asignación estratégica en Bitcoin',
+    h_en: 'Sovereign wealth funds and private banks raise strategic Bitcoin allocation to 2%',
+    b: 'Los vehículos institucionales al contado registran entradas netas récord durante cinco sesiones consecutivas.',
+    b_en: 'Spot institutional vehicles record five consecutive sessions of record net inflows.',
+    w: 'La demanda estructural institucional absorbe la oferta líquida circulante e impulsa al conjunto del mercado cripto.',
+    w_en: 'Structural institutional demand absorbs circulating liquid supply and lifts the broader crypto market.',
+    cat: 'ACTIVOS DIGITALES',
+    cat_en: 'DIGITAL ASSETS',
+    author: 'Alex Rivera · Mesa Cripto & Web3',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Flujo Neto 5 Días', val: '+$4.15B USD', tone: 'pos' },
+      { label: 'Oferta en Exchanges', val: 'Mínimo 6 Años', tone: 'pos' },
+      { label: 'Correlación Bonos', val: '0.12 (Baja)', tone: 'pos' }
+    ],
+    quote: {
+      text: '“La inclusión de activos digitales dentro de carteras multi-activo soberanas ha dejado de ser experimental para convertirse en política de asignación estándar.”',
+      by: 'Informe de Flujos Institucionales · Nueva York'
+    },
+    article: [
+      'NUEVA YORK — Informes regulatorios trimestrales revelaron que varios fondos soberanos y divisiones de gestión patrimonial bancaria han incrementado su asignación objetivo en Bitcoin hasta el 2 % de sus carteras globales.',
+      'La escasez programada de emisión tras el último ciclo y la caída de reservas disponibles en plataformas de intercambio amplifican el impacto de cada orden institucional.',
+      'La entrada de capital no se limitó a Bitcoin, extendiéndose hacia redes de contratos inteligentes con alta actividad financiera y de pagos.',
+      'Bitcoin, Ethereum, Solana y BNB Chain registraron fuertes avances acompañados por mayor volumen de custodia en JPMorgan.'
+    ],
+    sg: [['BTC', 1.8], ['ETH', 1.3], ['SOL', 1.5], ['BNB', 1.4], ['JPM', 0.3]]
+  },
+  {
+    outletIdx: 1,
+    h: 'Costco y Walmart reportan fuerte expansión en tráfico de consumidores y membresías',
+    h_en: 'Costco and Walmart report strong expansion in consumer traffic and memberships',
+    b: 'Los hogares priorizan compras al por mayor y bienes esenciales de alta rotación ante el entorno de tasas.',
+    b_en: 'Households prioritize bulk buying and high-turnover essentials amid elevated rate environment.',
+    w: 'Fortalece el liderazgo defensivo del consumo básico frente a marcas discrecionales de vestuario y entretenimiento.',
+    w_en: 'Strengthens defensive leadership of consumer staples over discretionary apparel and entertainment brands.',
+    cat: 'CONSUMO & RETAIL',
+    cat_en: 'CONSUMER & RETAIL',
+    author: 'David Miller · Mesa Corporativa Nueva York',
+    readTime: '4 min de lectura',
+    metrics: [
+      { label: 'Renovación Membresía', val: '93.2% Récord', tone: 'pos' },
+      { label: 'Ventas Comparables', val: '+6.8% Trim.', tone: 'pos' },
+      { label: 'Rotación Inventario', val: 'Máximo 3 Años', tone: 'pos' }
+    ],
+    quote: {
+      text: '“El consumidor busca valor real y escala en productos básicos, consolidando el tráfico recurrente en clubes de precios y comercio omnicanal.”',
+      by: 'Análisis de Consumo Minorista · Nueva York'
+    },
+    article: [
+      'BENTONVILLE — Los datos mensuales de ventas minoristas confirmaron una sólida expansión en el tráfico de clientes tanto en tiendas físicas como en canales digitales de Walmart y Costco Wholesale.',
+      'Las tasas de renovación de membresías ejecutivas alcanzaron máximos históricos del 93.2 %, proporcionando un flujo de ingresos altamente predecible que blinda sus márgenes operativos.',
+      'En contraste, los consumidores mostraron mayor selectividad en categorías discrecionales como calzado deportivo y parques temáticos.',
+      'Walmart y Costco lideraron las ganancias defensivas del sector consumo, mientras Nike y Walt Disney registraron toma de utilidades.'
+    ],
+    sg: [['COST', 1.2], ['WMT', 1.1], ['NKE', -0.6], ['DIS', -0.4]]
+  }
+];
+
+const BLACK_SWANS = [
+  {
+    outletIdx: 0,
+    h: 'CISNE NEGRO: Apagón submarino transatlántico paraliza centros financieros y nubes',
+    h_en: 'BLACK SWAN: Transatlantic subsea cable blackout paralyzes financial hubs and cloud regions',
+    b: 'Ruptura simultánea de 4 cables de fibra óptica intercontinentales provoca pánico vendedor en renta variable y repunte histórico del Oro.',
+    b_en: 'Simultaneous severing of 4 intercontinental fiber cables triggers equity panic selling and historic Gold rally.',
+    w: 'La aversión extrema al riesgo liquida posiciones apalancadas en tecnología y cripto.',
+    w_en: 'Extreme risk aversion liquidates leveraged positions across tech and crypto.',
+    cat: 'CISNE NEGRO · CRISIS SISTÉMICA',
+    cat_en: 'BLACK SWAN · SYSTEMIC CRISIS',
+    metrics: [
+      { label: 'Latencia Transatlántica', val: '+420 ms Crítico', tone: 'neg' },
+      { label: 'Refugio Oro (XAU)', val: '+8.0% Salto', tone: 'pos' },
+      { label: 'Estado Mercados', val: 'Volatilidad Extrema', tone: 'neg' }
+    ],
+    quote: {
+      text: '“Los protocolos de enrutamiento satelital de respaldo están operando al 100% de capacidad mientras buques cableros zarpan hacia el Atlántico Norte.”',
+      by: 'Centro Internacional de Infraestructura Crítica'
+    },
+    shocks: [['SPY', -0.07], ['CHP', -0.10], ['BIG', -0.08], ['BTC', -0.11], ['GOLD', 0.08], ['LMT', 0.05]]
+  },
+  {
+    outletIdx: 2,
+    h: 'CISNE NEGRO: Avance en Fusión Nuclear Comercial y Superconductores a Temperatura Ambiente',
+    h_en: 'BLACK SWAN: Commercial Nuclear Fusion & Room-Temperature Superconductor Breakthrough',
+    b: 'Consorcio científico verifica ganancia neta de energía estable, disparando el optimismo en IA, robótica y manufactura avanzada.',
+    b_en: 'Scientific consortium verifies sustained net energy gain, sparking euphoria in AI, robotics, and advanced manufacturing.',
+    w: 'Revalorización explosiva en semiconductores y vehículos autónomos; fuerte caída en petróleo tradicional.',
+    w_en: 'Explosive re-rating in semiconductors and autonomous vehicles; sharp selloff in legacy oil.',
+    cat: 'CISNE NEGRO · REVOLUCIÓN TECNOLÓGICA',
+    cat_en: 'BLACK SWAN · TECH BREAKTHROUGH',
+    metrics: [
+      { label: 'Ganancia Neta Energía', val: 'Q > 4.5 Verificado', tone: 'pos' },
+      { label: 'Costo Futuro kWh', val: '-75% Proyectado', tone: 'pos' },
+      { label: 'Impacto Petróleo', val: 'Liquidación Crudo', tone: 'neg' }
+    ],
+    quote: {
+      text: '“La eliminación de la restricción energética desbloquea el escalamiento ilimitado de centros de datos de inteligencia artificial y robótica industrial.”',
+      by: 'Consorcio Internacional de Energía Limpia'
+    },
+    shocks: [['NVDA', 0.11], ['TSLA', 0.10], ['OPAI', 0.12], ['SPY', 0.05], ['XOM', -0.09], ['CVX', -0.09]]
+  },
+  {
+    outletIdx: 3,
+    h: 'CISNE NEGRO: Crisis de Liquidez en Bancos Regionales obliga a rescate de emergencia',
+    h_en: 'BLACK SWAN: Regional Banking Liquidity Crisis forces emergency central bank bailout',
+    b: 'Fuga acelerada de depósitos revive temores sistémicos en el sector financiero y dispara la demanda de Bitcoin y Oro.',
+    b_en: 'Accelerated deposit flight revives systemic fears in banking and triggers surge in Bitcoin and Gold.',
+    w: 'Rotación masiva fuera de banca tradicional hacia activos descentralizados y metales preciosos.',
+    w_en: 'Massive rotation out of traditional banking into decentralized assets and precious metals.',
+    cat: 'CISNE NEGRO · CRISIS BANCARIA',
+    cat_en: 'BLACK SWAN · BANKING CRISIS',
+    metrics: [
+      { label: 'Salida de Depósitos', val: '$140B en 24h', tone: 'neg' },
+      { label: 'Bitcoin / Oro', val: 'Máxima Demanda', tone: 'pos' },
+      { label: 'Línea Liquidez Fed', val: 'Activada', tone: 'neu' }
+    ],
+    quote: {
+      text: '“Los inversores institucionales están buscando activos sin riesgo de contraparte bancaria ante el deterioro en las carteras de crédito comercial.”',
+      by: 'Mesa de Riesgo Sistémico · Nueva York'
+    },
+    shocks: [['JPM', -0.09], ['SPY', -0.05], ['BTC', 0.11], ['ETH', 0.10], ['GOLD', 0.07]]
+  }
+];
+
+const UPGRADES_DEF = [
+  { id: 't2', name: 'Terminal Institucional Nivel 2', name_en: 'Institutional Tier-2 Terminal', desc: 'Reduce comisiones de ejecución en un 50% (0.005%) y desbloquea apalancamiento hasta 20x.', desc_en: 'Cuts execution fees by 50% (0.005%) and unlocks leverage up to 20x.', cost: 2500000 },
+  { id: 'radar', name: 'Radar Insider & Rumores', name_en: 'Insider Radar & Rumors', desc: 'Intercepta rumores filtrados del mercado 45 segundos antes de que se publique la noticia oficial.', desc_en: 'Intercepts leaked market rumors 45 seconds before official news breaks.', cost: 5000000 },
+  { id: 'twap', name: 'Algoritmo Institucional TWAP', name_en: 'Institutional TWAP Algorithm', desc: 'Reduce un 80% el impacto en el libro de órdenes (slippage) al ejecutar compras o ventas gigantes.', desc_en: 'Reduces order book slippage by 80% when executing massive block orders.', cost: 8000000 }
+];
+
+const MISSIONS_DEF = [
+  { id: 'first_trade', title: 'Bautizo de Fuego', title_en: 'Baptism of Fire', desc: 'Ejecuta tu primera operación en cualquier mercado.', reward: 50000, check: g => g.stats.trades >= 1 },
+  { id: 'blitz_win', title: 'Francotirador Blitz (+92%)', title_en: 'Blitz Sniper (+92%)', desc: 'Gana una opción rápida Sube/Baja.', reward: 100000, check: g => g.stats.blitzWins >= 1 },
+  { id: 'option_win', title: 'Operador de Derivados', title_en: 'Derivatives Trader', desc: 'Cierra un contrato Call o Put con beneficio positivo.', reward: 200000, check: g => g.stats.optionWins >= 1 },
+  { id: 'first_short', title: 'Oso de Wall Street', title_en: 'Wall Street Bear', desc: 'Cierra una posición en Corto (Short) con ganancia.', reward: 150000, check: g => g.stats.shortWins >= 1 },
+  { id: 'profit_10', title: 'Gestor Élite (+10%)', title_en: 'Elite Fund Manager (+10%)', desc: 'Supera en 10% tu patrimonio inicial.', reward: 500000, check: g => eq(g) >= g.k0 * 1.10 },
+  { id: 'top_100', title: 'Club de los 100 Multimillonarios', title_en: 'Top 100 Billionaires Club', desc: 'Alcanza los $23.90B y entra en el ranking mundial.', reward: 50000000, check: g => eq(g) >= 23.9e9 }
+];
+
+const CAPITAL_PRESETS = [
+  { label: '$100K', sub: 'Retail Pro', sub_en: 'Retail Pro', val: 1e5 },
+  { label: '$1M', sub: 'Fondo Semilla', sub_en: 'Seed Fund', val: 1e6 },
+  { label: '$10M', sub: 'Hedge Fund', sub_en: 'Hedge Fund', val: 1e7 },
+  { label: '$100M', sub: 'Institucional', sub_en: 'Institutional', val: 1e8 },
+  { label: '$1B', sub: 'Multimillonario', sub_en: 'Billionaire', val: 1e9 },
+  { label: '$50B', sub: 'Top 40 Forbes', sub_en: 'Forbes Top 40', val: 5e10 }
+];
+
+const SAVE_KEY = 'sim_market_corporate_v5';
+
+const fmtCap = (millions) => {
+  const usdVal = millions * 1e6;
+  if (usdVal >= 1e12) return '$' + (usdVal / 1e12).toFixed(2) + ' T';
+  if (usdVal >= 1e9) return '$' + (usdVal / 1e9).toFixed(1) + ' B';
+  return '$' + (usdVal / 1e6).toFixed(0) + ' M';
+};
+
+const fmtBillion = (val) => {
+  if (val >= 1e12) return '$' + (val / 1e12).toFixed(2) + ' T';
+  if (val >= 1e9) return '$' + (val / 1e9).toFixed(1) + ' B';
+  if (val >= 1e6) return '$' + (val / 1e6).toFixed(1) + ' M';
+  if (val >= 1e3) return '$' + (val / 1e3).toFixed(1) + ' K';
+  return usd(val);
+};
+
+const nz = () => { let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2832 * Math.random()); };
+const nb = a => a.bk = Array.from({ length: 12 }, () => Math.random() * 0.8 + 0.2);
+const lv = (a, s, i) => ({ px: a.p * Math.exp(s * a.sp * (i + 0.5)), sz: Math.max(0.01, Math.round(a.liq / 30 * (0.5 + a.bk[i % 12]) * 100) / 100) });
+
+function walk(a, side, q, twap = false) {
+  const effQ = twap ? q * 0.2 : q;
+  const s = side === 'buy' ? 1 : -1;
+  let r = effQ, c = 0, l = a.p, i = 0;
+  while (r > 0 && i < 5000) {
+    const L = lv(a, s, i++), t = Math.min(r, L.sz);
+    c += t * L.px; r -= t; l = L.px;
+  }
+  c += r * l;
+  return { v: effQ > 0 ? c / effQ : a.p, l };
+}
+
+function mv(a, r, k) {
+  const o = a.p, w = a.sig * k * 0.25;
+  r = Math.max(-0.22, Math.min(0.22, r || 0));
+  a.p = Math.max(0.01, o * Math.exp(r));
+  a.c.push({
+    o, c: a.p,
+    h: Math.max(o, a.p) * (1 + Math.abs(nz()) * w),
+    l: Math.min(o, a.p) * (1 - Math.abs(nz()) * w),
+    v: Math.round(a.liq * (0.1 + Math.random() * 0.15) * (1 + Math.min(3, Math.abs(r) / a.sig)))
+  });
+  if (a.c.length > 400) { a.c.shift(); a.base++; }
+  a.bias *= 0.93;
+  a.vm = 1 + (a.vm - 1) * 0.92;
+  if (a.mN > 0 && --a.mN === 0) { a.mom = a.cr; a.mN = a.cr ? 5 : 0; a.cr = 0; }
+  nb(a);
+}
+
+function evolve(g, k, bs, f) {
+  const M = nz(), S = {}, R = {};
+  const L = g.A.filter(a => a.sym !== 'SPY' && a.sec !== 'ETF' && f(a.sym));
+  L.forEach(a => R[a.sym] = a.mu * k + a.bias * bs + a.mom + a.sig * a.vm * k * (a.bm * M + 0.4 * (S[a.gp] ??= nz()) + 0.75 * nz()) - 0.5 * (a.sig * k) ** 2);
+  if (R.XOM > 0.003) { R.WMT -= 0.2 * R.XOM; R.BA -= 0.3 * R.XOM; R.MCD -= 0.15 * R.XOM; }
+  const R0 = { ...R };
+  L.forEach(a => { if (a.rv in R0) R[a.sym] -= 0.3 * R0[a.rv]; });
+
+  const techAvg = ((R.NVDA || 0) + (R.MSFT || 0) + (R.AAPL || 0) + (R.GOOGL || 0) + (R.META || 0)) / 5;
+  const chipAvg = ((R.NVDA || 0) + (R.AMD || 0) + (R.TSM || 0) + (R.AVGO || 0)) / 4;
+  if (f('TQQQ')) R.TQQQ = techAvg * 3 + nz() * 0.001;
+  if (f('SQQQ')) R.SQQQ = -techAvg * 3 + nz() * 0.001;
+  if (f('SOXL')) R.SOXL = chipAvg * 3.2 + nz() * 0.001;
+  if (f('SOXS')) R.SOXS = -chipAvg * 3.2 + nz() * 0.001;
+
+  if (f('SPY')) {
+    const st = L.filter(a => !CR.includes(a.sym));
+    R.SPY = st.reduce((s, a) => s + R[a.sym], 0) / st.length;
+  }
+  g.A.forEach(a => { if (a.sym in R) mv(a, R[a.sym], k); });
+}
+
+function initBillionaires(g) {
+  return BILLIONAIRES_100.map(([name, country, baseB, weights], idx) => {
+    const totalUsd = baseB * 1e9;
+    let allocated = 0;
+    const holdings = weights.map(([sym, pct]) => {
+      const asset = g.a[sym];
+      const val = totalUsd * pct;
+      allocated += val;
+      const shares = asset ? val / asset.p : 0;
+      return { sym, shares };
+    });
+    const cash = Math.max(0, totalUsd - allocated);
+    return { id: 'b_' + idx, name, country, baseVal: totalUsd, cash, holdings };
+  });
+}
+
+function calcBillionaireVal(b, g) {
+  let sum = b.cash;
+  for (let i = 0; i < b.holdings.length; i++) {
+    const hItem = b.holdings[i];
+    const asset = g.a[hItem.sym];
+    if (asset) sum += hItem.shares * asset.p;
+  }
+  return sum;
+}
+
+function scheduleEarnings(g) {
+  const pool = g.A.filter(a => !CR.includes(a.sym) && a.sym !== 'SPY' && a.sec !== 'ETF');
+  const picked = [];
+  while (picked.length < 4 && pool.length > 0) {
+    const idx = Math.floor(Math.random() * pool.length);
+    const item = pool.splice(idx, 1)[0];
+    picked.push({ sym: item.sym, name: item.name, inDays: picked.length + 1 });
+  }
+  g.earningsCal = picked;
+}
+
+function mkGame(cap = 1e8, savedData = null) {
+  const safeCap = Math.max(100, Number(cap) || 1e8);
+  const g = {
+    d: 0, tk: 0, cash: safeCap, k0: safeCap, bonds: 0, debt: 0, aum: 0,
+    P: {}, L: [], N: [], O: [], B: [], OP: [], alerts: [], levels: {},
+    a: {}, id: 0, oid: 1, bid: 1, opid: 1, alid: 1,
+    eqHist: [1.0], spyHist: [1.0], spyBase: 754.37,
+    billionaires: [],
+    earningsCal: [],
+    rumor: null,
+    upgrades: {},
+    unlocked: {},
+    favs: ['NVDA', 'AAPL', 'TSLA', 'BTC', 'SPY', 'TQQQ'],
+    openTabs: ['NVDA', 'BTC', 'TSLA', 'TQQQ'],
+    stats: { trades: 0, shortWins: 0, limitsFilled: 0, blitzWins: 0, optionWins: 0 }
+  };
+
+  if (savedData && savedData.A) {
+    Object.assign(g, savedData);
+    g.a = {};
+    g.A.forEach(a => { g.a[a.sym] = a; });
+    if (!g.B) g.B = [];
+    if (!g.OP) g.OP = [];
+    if (!g.alerts) g.alerts = [];
+    if (!g.levels) g.levels = {};
+    if (!g.upgrades) g.upgrades = {};
+    if (!g.billionaires || !g.billionaires.length) g.billionaires = initBillionaires(g);
+    if (!g.earningsCal || !g.earningsCal.length) scheduleEarnings(g);
+    return g;
+  }
+
+  g.A = AS.map(([sym, name, sec, p, sig, liq, sp, bm, sh]) => {
+    const a = {
+      sym, name, sec, p, sig, liq: liq * Math.max(1, safeCap / 1e6), sp, bm, sh,
+      mu: CR.includes(sym) || sec === 'ETF' ? 0 : 2e-5, rv: RV[sym],
+      gp: sec === 'ENE' ? ({ XOM: 'OIL', CVX: 'OIL', GOLD: 'GOLD', SPY: 'SPY' }[sym] || 'CRY') : sec,
+      c: [], mk: [], base: 0, bias: 0, vm: 1, mom: 0, mN: 0, cr: 0, d0: p
+    };
+    nb(a); g.a[sym] = a; return a;
+  });
+  for (let i = 0; i < 70; i++) evolve(g, 1, 1, () => true);
+  g.A.forEach(a => a.d0 = a.p);
+  g.spyBase = g.a.SPY.p;
+  g.billionaires = initBillionaires(g);
+  scheduleEarnings(g);
+  fire(g, true);
+  return g;
+}
+
+function saveGame(g) {
+  try {
+    const { a, onBreaking, last, ...serializable } = g;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serializable));
+  } catch (e) {}
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function pushNews(g, item, silent = false) {
+  g.N.unshift(item);
+  g.N.length = Math.min(g.N.length, 90);
+  if (!silent && g.onBreaking) {
+    g.onBreaking(item);
+  }
+}
+
+function pickNextNews() {
+  return NW[Math.floor(Math.random() * NW.length)];
+}
+
+function fire(g, silent = false, forcedTemplate = null) {
+  let t = forcedTemplate || g.rumor?.template;
+  if (!t) {
+    do t = pickNextNews(); while (t === g.last);
+  }
+  g.last = t;
+  g.rumor = null;
+  const sy = {};
+  const snapPx = {};
+  t.sg.forEach(([k, s]) => (SEC[k] || [k]).forEach(x => {
+    sy[x] = (sy[x] || 0) + s;
+    const a = g.a[x];
+    if (a) {
+      snapPx[x] = a.p;
+      a.bias += s * 0.0042;
+      a.vm = Math.max(a.vm, 1 + Math.abs(s) * 1.1);
+    }
+  }));
+  const outlet = MEDIA_OUTLETS[t.outletIdx ?? Math.floor(Math.random() * MEDIA_OUTLETS.length)];
+  const item = {
+    id: g.id++, d: g.d, tk: g.tk,
+    h: t.h, h_en: t.h_en || t.h,
+    b: t.b, b_en: t.b_en || t.b,
+    w: t.w, w_en: t.w_en || t.w,
+    cat: t.cat, cat_en: t.cat_en || t.cat,
+    author: t.author, readTime: t.readTime, article: t.article,
+    metrics: t.metrics, quote: t.quote, outlet,
+    sy: Object.keys(sy), sg: sy, snapPx, tag: 'BOLETÍN',
+    realTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  };
+  pushNews(g, item, silent);
+}
+
+function triggerBlackSwan(g) {
+  const bs = BLACK_SWANS[Math.floor(Math.random() * BLACK_SWANS.length)];
+  const sy = {};
+  const snapPx = {};
+  bs.shocks.forEach(([k, pct]) => (SEC[k] || [k]).forEach(x => {
+    const a = g.a[x];
+    if (a) {
+      snapPx[x] = a.p;
+      sy[x] = pct > 0 ? 2.5 : -2.5;
+      mv(a, pct, 2.5);
+      a.bias += pct * 0.05;
+      a.vm = 2.4;
+    }
+  }));
+  const outlet = MEDIA_OUTLETS[bs.outletIdx ?? 0];
+  pushNews(g, {
+    id: g.id++, d: g.d, tk: g.tk,
+    h: bs.h, h_en: bs.h_en || bs.h,
+    b: bs.b, b_en: bs.b_en || bs.b,
+    w: bs.w, w_en: bs.w_en || bs.w,
+    cat: bs.cat, cat_en: bs.cat_en || bs.cat,
+    author: 'Global Systemic Risk Desk', readTime: '4 min read',
+    metrics: bs.metrics, quote: bs.quote, outlet,
+    article: [
+      `ALERTA GLOBAL — ${bs.b}`,
+      `${bs.w} Los algoritmos institucionales de alta frecuencia han activado protocolos de volatilidad extrema en los principales parqués internacionales de Nueva York, Londres y Tokio.`,
+      `Los comités de riesgo de los bancos de inversión ajustan de emergencia los requisitos de margen mientras los patrimonios de los principales multimillonarios sufren variaciones históricas en cuestión de minutos.`,
+      `Los analistas recomiendan vigilar los niveles de liquidez en el libro de órdenes y las coberturas mediante opciones Put y activos refugio.`
+    ],
+    sy: Object.keys(sy), sg: sy, snapPx, tag: 'CISNE NEGRO',
+    realTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  });
+}
+
+function specialEvent(g, forcedSym = null) {
+  if (!forcedSym && Math.random() < 0.22) {
+    triggerBlackSwan(g);
+    return;
+  }
+  const candidates = g.A.filter(a => !CR.includes(a.sym) && a.sym !== 'SPY' && a.sec !== 'ETF');
+  const target = forcedSym ? g.a[forcedSym] : candidates[Math.floor(Math.random() * candidates.length)];
+  if (!target) return;
+  const outlet = MEDIA_OUTLETS[Math.floor(Math.random() * MEDIA_OUTLETS.length)];
+
+  if (!forcedSym && target.p > 1200) {
+    const ratio = 4;
+    const oldPx = target.p;
+    target.p /= ratio; target.d0 /= ratio; target.sh *= ratio;
+    target.c.forEach(c => { c.o /= ratio; c.c /= ratio; c.h /= ratio; c.l /= ratio; });
+    if (g.P[target.sym] && g.P[target.sym].q !== 0) {
+      g.P[target.sym].q *= ratio; g.P[target.sym].avg /= ratio;
+      if (g.P[target.sym].sl) g.P[target.sym].sl /= ratio;
+      if (g.P[target.sym].tp) g.P[target.sym].tp /= ratio;
+    }
+    g.billionaires.forEach(b => b.holdings.forEach(hItem => { if (hItem.sym === target.sym) hItem.shares *= ratio; }));
+    pushNews(g, {
+      id: g.id++, d: g.d, tk: g.tk,
+      h: `SPLIT DE ACCIONES ${ratio}:1 EN ${target.name} (${target.sym})`,
+      h_en: `STOCK SPLIT ${ratio}:1 ANNOUNCED BY ${target.name} (${target.sym})`,
+      b: `La junta directiva aprueba dividir cada acción en ${ratio} títulos para facilitar la liquidez institucional y minorista.`,
+      b_en: `Board of directors approves ${ratio}-for-1 stock split to enhance institutional and retail liquidity.`,
+      w: `El valor total de la empresa (${fmtCap(target.p * target.sh)}) permanece intacto, ajustando su cotización a ${usd(target.p)}.`,
+      w_en: `Total market capitalization (${fmtCap(target.p * target.sh)}) remains unchanged, adjusting share price to ${usd(target.p)}.`,
+      cat: 'ACCIÓN CORPORATIVA', cat_en: 'CORPORATE ACTION',
+      author: 'Markets Desk · New York', readTime: '3 min',
+      outlet,
+      metrics: [
+        { label: 'Split Ratio', val: `${ratio} : 1`, tone: 'pos' },
+        { label: 'Adjusted Price', val: usd(target.p), tone: 'neu' },
+        { label: 'Market Cap', val: fmtCap(target.p * target.sh), tone: 'pos' }
+      ],
+      quote: {
+        text: '“Esta medida amplía el acceso de los inversores globales y mejora la profundidad del libro de órdenes en negociación continua.”',
+        by: `Corporate Secretary · ${target.name}`
+      },
+      article: [
+        `NEW YORK — ${target.name} (${target.sym}) ejecutó oficialmente un desdoblamiento de acciones en proporción ${ratio}:1, ajustando el precio por título desde ${usd(oldPx)} hasta ${usd(target.p)}.`,
+        `Todas las posiciones abiertas en cartera y los contratos vigentes se han recalibrado automáticamente manteniendo intacto su valor nocional.`,
+        `Históricamente, los splits corporativos de grandes líderes tecnológicos y de consumo atraen mayor participación institucional y volumen diario.`
+      ],
+      sy: [target.sym], sg: { [target.sym]: 0.5 }, snapPx: { [target.sym]: target.p }, tag: 'SPLIT 4:1',
+      realTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    });
+    return;
+  }
+
+  const beat = Math.random() > 0.45;
+  const oldPx = target.p;
+  const shock = beat ? (0.06 + Math.random() * 0.08) : -(0.06 + Math.random() * 0.08);
+  mv(target, shock, 2);
+  target.bias += beat ? 0.005 : -0.005;
+  pushNews(g, {
+    id: g.id++, d: g.d, tk: g.tk,
+    h: `RESULTADOS TRIMESTRALES: ${target.name} (${target.sym}) ${beat ? 'SUPERA' : 'INCUMPLE'} PREVISIONES`,
+    h_en: `QUARTERLY EARNINGS: ${target.name} (${target.sym}) ${beat ? 'BEATS' : 'MISSES'} WALL STREET ESTIMATES`,
+    b: beat ? `Beneficio por acción (BPA) un 18 % por encima del consenso de analistas y guía anual revisada al alza.` : `Márgenes operativos se contraen por mayores costos y guía trimestral recortada por debajo del consenso.`,
+    b_en: beat ? `Earnings per share (EPS) beat consensus by 18% with full-year guidance raised.` : `Operating margins contract on higher costs as quarterly guidance is trimmed below consensus.`,
+    w: beat ? `Fuerte entrada de flujo institucional impulsa a ${target.sym}.` : `Ventas masivas presionan la cotización a la baja.`,
+    w_en: beat ? `Heavy institutional inflows drive ${target.sym} higher.` : `Heavy institutional selling pressures share price lower.`,
+    cat: 'RESULTADOS TRIMESTRALES', cat_en: 'QUARTERLY EARNINGS',
+    author: 'Corporate Analysis Desk', readTime: '3 min',
+    outlet,
+    metrics: [
+      { label: 'EPS Surprise', val: beat ? '+18.4%' : '-14.2%', tone: beat ? 'pos' : 'neg' },
+      { label: 'Price Reaction', val: pc(target.p / oldPx - 1), tone: beat ? 'pos' : 'neg' },
+      { label: 'Next Qtr Guide', val: beat ? 'Raised' : 'Cut', tone: beat ? 'pos' : 'neg' }
+    ],
+    quote: {
+      text: beat
+        ? '“La disciplina operativa y la fuerte demanda en nuestras líneas principales nos permiten elevar nuestras proyecciones de flujo de caja libre para todo el año.”'
+        : '“Enfrentamos vientos en contra macroeconómicos y presiones de costos que exigirán una reestructuración de eficiencia en los próximos dos trimestres.”',
+      by: `CFO Office · ${target.name}`
+    },
+    article: [
+      `NEW YORK — ${target.name} (${target.sym}) publicó sus resultados financieros trimestrales al cierre, provocando un salto inmediato desde ${usd(oldPx)} hasta ${usd(target.p)}.`,
+      beat
+        ? `La compañía superó ampliamente las estimaciones de ingresos y beneficio neto por acción, respaldada por una expansión de márgenes brutos y sólida generación de caja.`
+        : `El informe trimestral reveló una desaceleración en el crecimiento orgánico de ingresos y compresión de márgenes operativos que decepcionó a los fondos institucionales.`,
+      `Las mesas de derivados registraron un incremento abrupto en el volumen de opciones Call y Put sobre ${target.sym} tras conocerse el reporte.`
+    ],
+    sy: [target.sym], sg: { [target.sym]: beat ? 1.8 : -1.8 }, snapPx: { [target.sym]: oldPx }, tag: 'EARNINGS',
+    realTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  });
+}
+
+const getFeeRate = g => (g.upgrades?.t2 ? 0.00005 : 0.0001);
+const getMaxLev = g => (g.upgrades?.t2 ? 20 : 10);
+
+function exec(g, s, side, q, lev = 1, kind = null) {
+  const a = g.a[s];
+  q = Math.floor(q * 1e4) / 1e4;
+  if (!(q > 0)) return 'Cantidad inválida / Invalid quantity';
+  lev = Math.max(1, Math.min(getMaxLev(g), lev || 1));
+
+  const P = g.P[s] || (g.P[s] = { q: 0, avg: 0, margin: 0, lev: 1, div: 0, rl: 0, sl: 0, tp: 0 });
+  const w = walk(a, side, q, !!g.upgrades?.twap);
+  const notional = w.v * q;
+  const fee = notional * getFeeRate(g);
+  let pnl = 0;
+
+  if (side === 'buy') {
+    if (P.q < 0) {
+      const closeQ = Math.min(q, Math.abs(P.q));
+      const ratio = closeQ / Math.abs(P.q);
+      const releasedMargin = P.margin * ratio;
+      pnl = (P.avg - w.v) * closeQ - fee;
+      if (pnl > 0) g.stats.shortWins++;
+      g.cash += releasedMargin + pnl;
+      P.margin -= releasedMargin;
+      P.rl += pnl;
+      P.q = Math.round((P.q + closeQ) * 1e4) / 1e4;
+      if (Math.abs(P.q) < 1e-4) { P.q = 0; P.avg = 0; P.margin = 0; P.lev = 1; P.sl = P.tp = 0; }
+      const rem = Math.round((q - closeQ) * 1e4) / 1e4;
+      if (rem > 0) return exec(g, s, 'buy', rem, lev, kind);
+    } else {
+      const reqMargin = notional / lev;
+      if (reqMargin + fee > g.cash) return `Insufficient margin (${usd(reqMargin + fee)})`;
+      g.cash -= (reqMargin + fee);
+      const newQ = Math.round((P.q + q) * 1e4) / 1e4;
+      P.avg = (P.avg * P.q + notional) / newQ;
+      P.q = newQ;
+      P.margin += reqMargin;
+      P.lev = Math.round((P.q * P.avg) / P.margin * 10) / 10;
+    }
+  } else {
+    if (P.q > 0) {
+      const closeQ = Math.min(q, P.q);
+      const ratio = closeQ / P.q;
+      const releasedMargin = P.margin * ratio;
+      pnl = (w.v - P.avg) * closeQ - fee;
+      g.cash += releasedMargin + pnl;
+      P.margin -= releasedMargin;
+      P.rl += pnl;
+      P.q = Math.round((P.q - closeQ) * 1e4) / 1e4;
+      if (P.q < 1e-4) { P.q = 0; P.avg = 0; P.margin = 0; P.lev = 1; P.sl = P.tp = 0; }
+      const rem = Math.round((q - closeQ) * 1e4) / 1e4;
+      if (rem > 0) return exec(g, s, 'sell', rem, lev, kind);
+    } else {
+      const reqMargin = notional / lev;
+      if (reqMargin + fee > g.cash) return `Insufficient margin for Short (${usd(reqMargin + fee)})`;
+      g.cash -= (reqMargin + fee);
+      const absOld = Math.abs(P.q);
+      const newAbs = Math.round((absOld + q) * 1e4) / 1e4;
+      P.avg = (P.avg * absOld + notional) / newAbs;
+      P.q = -newAbs;
+      P.margin += reqMargin;
+      P.lev = Math.round((newAbs * P.avg) / P.margin * 10) / 10;
+    }
+  }
+
+  const I = Math.log(w.l / a.p), c = a.c[a.c.length - 1];
+  a.p = w.l; c.c = a.p; c.h = Math.max(c.h, a.p); c.l = Math.min(c.l, a.p); c.v += q;
+  a.mom = I * 0.12; a.mN = 6; a.cr = -I * 0.12 * 6 * 0.6 / 5;
+  a.mk.push({ i: a.base + a.c.length - 1, s: side, px: w.v });
+
+  const label = kind || (side === 'buy' ? (P.q >= 0 ? `Buy ${lev > 1 ? lev + 'x' : ''}` : 'Cover Short') : (P.q < 0 ? `Short ${lev}x` : 'Sell'));
+  g.L.unshift({ d: g.d, tk: g.tk, sym: s, k: label.trim(), q, px: w.v, fee, pnl });
+  g.stats.trades++;
+  return null;
+}
+
+function calcOptionPrice(a, type, strike, daysLeft) {
+  const intrinsic = type === 'CALL' ? Math.max(0, a.p - strike) : Math.max(0, strike - a.p);
+  const timeVal = a.p * a.sig * 4.5 * Math.sqrt(Math.max(0.1, daysLeft));
+  return Math.max(0.05, intrinsic + timeVal);
+}
+
+function buyOptionContract(g, sym, type, strike, days, contracts) {
+  const a = g.a[sym];
+  if (!(contracts >= 1)) return 'Min 1 contract (100 shares)';
+  const premiumPerShare = calcOptionPrice(a, type, strike, days);
+  const totalCost = premiumPerShare * 100 * contracts;
+  if (totalCost > g.cash) return `Insufficient premium (${usd(totalCost)})`;
+  g.cash -= totalCost;
+  g.OP.unshift({ id: g.opid++, sym, type, strike, daysLeft: days, contracts, cost: totalCost, entryPx: a.p });
+  g.L.unshift({ d: g.d, tk: g.tk, sym, k: `Buy ${type} $${strike.toFixed(0)} (${days}d)`, q: contracts, px: premiumPerShare, fee: 0, pnl: 0 });
+  g.stats.trades++;
+  return null;
+}
+
+function closeOptionContract(g, id, expired = false) {
+  const idx = g.OP.findIndex(o => o.id === id);
+  if (idx === -1) return;
+  const o = g.OP[idx];
+  const a = g.a[o.sym];
+  const curVal = calcOptionPrice(a, o.type, o.strike, expired ? 0 : o.daysLeft) * 100 * o.contracts;
+  const pnl = curVal - o.cost;
+  g.cash += curVal;
+  if (pnl > 0) g.stats.optionWins++;
+  g.L.unshift({
+    d: g.d, tk: g.tk, sym: o.sym,
+    k: `${expired ? 'Exp.' : 'Close'} ${o.type} $${o.strike.toFixed(0)}`,
+    q: o.contracts, px: curVal / (100 * o.contracts), fee: 0, pnl
+  });
+  g.OP.splice(idx, 1);
+}
+
+function openBlitzOption(g, sym, dir, stake, durationSec, payoutRate = 0.92) {
+  if (!(stake > 0) || stake > g.cash) return 'Insufficient cash for Blitz trade';
+  const a = g.a[sym];
+  g.cash -= stake;
+  g.B.unshift({ id: g.bid++, sym, dir, stake, entryPx: a.p, remSec: durationSec, totalSec: durationSec, payoutRate });
+  g.stats.trades++;
+  return null;
+}
+
+function tickBlitzSecond(g) {
+  if (!g.B || !g.B.length) return;
+  for (let i = g.B.length - 1; i >= 0; i--) {
+    const b = g.B[i];
+    b.remSec -= 1;
+    if (b.remSec <= 0) {
+      const curPx = g.a[b.sym].p;
+      const won = (b.dir === 'up' && curPx > b.entryPx) || (b.dir === 'down' && curPx < b.entryPx);
+      const tie = curPx === b.entryPx;
+      let pnl = -b.stake;
+      if (won) {
+        g.cash += b.stake * (1 + b.payoutRate);
+        pnl = b.stake * b.payoutRate;
+        g.stats.blitzWins++;
+      } else if (tie) {
+        g.cash += b.stake;
+        pnl = 0;
+      }
+      g.L.unshift({
+        d: g.d, tk: g.tk, sym: b.sym,
+        k: `Blitz ${b.dir === 'up' ? 'UP ↗' : 'DOWN ↘'} (${won ? 'WON' : tie ? 'TIE' : 'LOST'})`,
+        q: b.stake, px: curPx, fee: 0, pnl
+      });
+      g.B.splice(i, 1);
+    }
+  }
+}
+
+function addLimitOrder(g, sym, side, q, targetPx, lev) {
+  q = Math.floor(q * 1e4) / 1e4;
+  if (!(q > 0) || !(targetPx > 0)) return 'Invalid quantity or target price';
+  g.O.unshift({ id: g.oid++, sym, side, q, targetPx, lev, created: tm(g.d, g.tk) });
+  return null;
+}
+
+function check(g) {
+  for (let i = g.O.length - 1; i >= 0; i--) {
+    const o = g.O[i];
+    const a = g.a[o.sym];
+    if (!a) continue;
+    const hit = (o.side === 'buy' && a.p <= o.targetPx) || (o.side === 'sell' && a.p >= o.targetPx);
+    if (hit) {
+      const err = exec(g, o.sym, o.side, o.q, o.lev, `Limit ${o.side === 'buy' ? 'Buy' : 'Sell'}`);
+      if (!err) { g.stats.limitsFilled++; g.O.splice(i, 1); }
+    }
+  }
+
+  for (let i = g.alerts.length - 1; i >= 0; i--) {
+    const al = g.alerts[i];
+    const a = g.a[al.sym];
+    if (!a) continue;
+    const triggered = (al.cond === 'above' && a.p >= al.val) || (al.cond === 'below' && a.p <= al.val);
+    if (triggered) {
+      g.L.unshift({ d: g.d, tk: g.tk, sym: al.sym, k: `Price Alert (${al.cond === 'above' ? '≥' : '≤'} ${usd(al.val)})`, q: 1, px: a.p, fee: 0, pnl: 0 });
+      g.alerts.splice(i, 1);
+    }
+  }
+
+  Object.entries(g.P).forEach(([s, p]) => {
+    const a = g.a[s];
+    if (p.q > 0) {
+      const uPnl = (a.p - p.avg) * p.q;
+      if (p.margin > 0 && uPnl <= -p.margin * 0.85) {
+        exec(g, s, 'sell', p.q, 1, 'LIQUIDATION (Margin Call)');
+        return;
+      }
+      const sl = p.sl && a.p <= p.sl;
+      if (sl || (p.tp && a.p >= p.tp)) exec(g, s, 'sell', p.q, 1, sl ? 'Stop Loss' : 'Take Profit');
+    } else if (p.q < 0) {
+      const absQ = Math.abs(p.q);
+      const uPnl = (p.avg - a.p) * absQ;
+      if (p.margin > 0 && uPnl <= -p.margin * 0.85) {
+        exec(g, s, 'buy', absQ, 1, 'SHORT LIQUIDATION');
+        return;
+      }
+      const sl = p.sl && a.p >= p.sl;
+      if (sl || (p.tp && a.p <= p.tp)) exec(g, s, 'buy', absQ, 1, sl ? 'Stop Loss Short' : 'Take Profit Short');
+    }
+  });
+
+  MISSIONS_DEF.forEach(m => {
+    if (!g.unlocked[m.id] && m.check(g)) {
+      g.unlocked[m.id] = true;
+      const scaleReward = m.reward * (g.k0 / 1e8);
+      g.cash += scaleReward;
+      g.L.unshift({ d: g.d, tk: g.tk, sym: 'Bonus', k: `Milestone: ${m.title_en}`, q: 1, px: scaleReward, fee: 0, pnl: scaleReward });
+    }
+  });
+}
+
+function night(g) {
+  g.A.forEach(a => a.d0 = a.p);
+
+  for (let i = g.OP.length - 1; i >= 0; i--) {
+    g.OP[i].daysLeft -= 1;
+    if (g.OP[i].daysLeft <= 0) closeOptionContract(g, g.OP[i].id, true);
+  }
+
+  let earningsToday = null;
+  if (g.earningsCal && g.earningsCal.length) {
+    g.earningsCal.forEach(e => e.inDays -= 1);
+    const due = g.earningsCal.find(e => e.inDays <= 0);
+    if (due) earningsToday = due.sym;
+    g.earningsCal = g.earningsCal.filter(e => e.inDays > 0);
+    if (g.earningsCal.length === 0) scheduleEarnings(g);
+  }
+
+  if (earningsToday) specialEvent(g, earningsToday);
+  else if (Math.random() < 0.35) specialEvent(g);
+  else fire(g);
+
+  evolve(g, 2.5, 7, s => !CR.includes(s));
+  for (let i = 0; i < 4; i++) evolve(g, 1.8, 3, s => CR.includes(s));
+  g.d++; g.tk = 0;
+
+  if (g.bonds > 0) g.bonds += g.bonds * 0.0003;
+  if (g.debt > 0) g.debt += g.debt * 0.0005;
+
+  const myRet = eq(g) / g.k0 - 1;
+  const spyRet = g.a.SPY.p / g.spyBase - 1;
+  if (myRet > spyRet + 0.01 && myRet > 0) {
+    const inflow = g.k0 * 0.15;
+    g.aum += inflow;
+    const mgmtFee = g.aum * 0.0002;
+    g.cash += mgmtFee;
+    if (mgmtFee > 10) g.L.unshift({ d: g.d, tk: 0, sym: 'AUM', k: 'Mgmt Fee (2%)', q: 1, px: mgmtFee, fee: 0, pnl: mgmtFee });
+  } else if (myRet < spyRet - 0.04 && g.aum > 0) {
+    g.aum *= 0.7;
+  }
+
+  if (g.d % 30 === 0) DV.forEach(s => {
+    const P = g.P[s], a = g.a[s];
+    if (P && P.q > 0) {
+      const m = P.q * a.p * 0.005;
+      g.cash += m; P.div += m;
+      g.L.unshift({ d: g.d, tk: 0, sym: s, k: 'Dividend', q: P.q, px: a.p * 0.005, fee: 0, pnl: m });
+    }
+  });
+  check(g);
+  saveGame(g);
+}
+
+function tick(g) {
+  evolve(g, 1, 1, () => true);
+  g.tk++;
+  check(g);
+  const curEq = eq(g);
+  g.eqHist.push(curEq / g.k0);
+  g.spyHist.push(g.a.SPY.p / g.spyBase);
+  if (g.eqHist.length > 100) { g.eqHist.shift(); g.spyHist.shift(); }
+  if (g.tk >= 39) night(g);
+}
+
+const uf = (a, side, usdVal, lev = 1, g = null) => {
+  const feeRate = g ? getFeeRate(g) : 1e-4;
+  const s = side === 'buy' ? 1 : -1;
+  let b = (usdVal * lev) / (1 + s * feeRate), q = 0, i = 0;
+  while (b > 0 && i < 5000) {
+    const L = lv(a, s, i++), c = L.px * L.sz;
+    if (b >= c) { q += L.sz; b -= c; } else { q += b / L.px; b = 0; }
+  }
+  return Math.floor(q * 1e4) / 1e4;
+};
+
+const eq = g => {
+  const posVal = Object.entries(g.P).reduce((s, [k, p]) => {
+    if (!p.q) return s;
+    const px = g.a[k].p;
+    const uPnl = p.q > 0 ? (px - p.avg) * p.q : (p.avg - px) * Math.abs(p.q);
+    return s + p.margin + uPnl;
+  }, 0);
+  const optVal = (g.OP || []).reduce((s, o) => s + calcOptionPrice(g.a[o.sym], o.type, o.strike, o.daysLeft) * 100 * o.contracts, 0);
+  const blitzStake = (g.B || []).reduce((s, b) => s + b.stake, 0);
+  return g.cash + (g.bonds || 0) - (g.debt || 0) + posVal + optVal + blitzStake;
+};
+
+const tm = (d, t, lang = 'es') => {
+  const m = 570 + t * 10;
+  const yPrefix = lang === 'en' ? 'Y' : 'A';
+  return yPrefix + (Math.floor(d / 360) + 1) + ' M' + (Math.floor(d % 360 / 30) + 1) + ' D' + (d % 30 + 1) + ' ' + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(Math.floor(m % 60)).padStart(2, '0');
+};
+const usd = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pc = n => (n >= 0 ? '+' : '') + (n * 100).toFixed(2) + '%';
+const cl = n => n >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+const IC = {
+  pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
+  play: 'M5 3l14 9-14 9V3z',
+  fast: 'M13 17l5-5-5-5M6 17l5-5-5-5',
+  zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  skip: 'M5 4l10 8-10 8V4zM19 5v14',
+  reset: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5',
+  bell: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
+  news: 'M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l6 6v8a2 2 0 0 1-2 2zM14 4v6h6M8 13h8M8 17h5',
+  grid: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',
+  trophy: 'M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z',
+  bank: 'M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3',
+  save: 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8',
+  cpu: 'M4 4h16v16H4zM9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3',
+  orders: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 12h6M9 16h4',
+  trend: 'M23 6l-9.5 9.5-5-5L1 18M17 6h6v6',
+  history: 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+  edit: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'
+};
+
+const I = ({ d, s = 15 }) => h`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d=${d}/></svg>`;
+const PN = 'rounded-md border border-zinc-800/90 bg-[#0d0d0f] shadow-xl';
+const B = (on, f, ic, t, extra = '') => h`<button onClick=${f} class="flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-medium transition ${on ? 'bg-zinc-200/15 border-zinc-300 text-white shadow-sm' : 'border-zinc-800 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200'} ${extra}">${ic ? h`<${I} d=${ic} s=${13}/>` : null}${t}</button>`;
+
+function SidebarButton({ active, onClick, icon, label, title, badge }) {
+  return h`<button onClick=${onClick} title=${title} class="relative flex flex-col items-center gap-1 p-1.5 rounded w-full text-[9px] transition ${active ? 'bg-zinc-200/15 text-white font-bold border border-zinc-400' : 'text-zinc-400 hover:text-white hover:bg-zinc-900'}">
+    <${I} d=${icon} s=${16}/>
+    <span class="truncate w-full text-center">${label}</span>
+    ${badge > 0 && h`<span class="absolute top-1 right-1 px-1 rounded-full bg-zinc-200 text-zinc-950 font-black text-[8px] leading-tight">${badge}</span>`}
+  </button>`;
+}
+
+function CapitalModal({ open, onClose, currentCap, onApply, lang, t }) {
+  const [val, setVal] = useState(String(currentCap));
+  const [mode, setMode] = useState('new');
+
+  useEffect(() => {
+    if (open) setVal(String(currentCap));
+  }, [open, currentCap]);
+
+  if (!open) return null;
+  const parsed = Math.max(100, Number(val) || 0);
+
+  return h`
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" onClick=${onClose}>
+      <div class="${PN} w-full max-w-lg overflow-hidden border-zinc-700" onClick=${e => e.stopPropagation()}>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#060607]">
+          <div class="flex items-center gap-2">
+            <${I} d=${IC.bank} s=${16}/>
+            <b class="text-white text-xs uppercase tracking-wider">${t.capModalTitle}</b>
+          </div>
+          <button onClick=${onClose} class="px-2 py-0.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs">✕</button>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <div>
+            <div class="text-[10.5px] font-bold uppercase text-zinc-400 mb-2">${t.quickCapProfiles}</div>
+            <div class="grid grid-cols-3 gap-2">
+              ${CAPITAL_PRESETS.map(p => {
+                const selected = Number(val) === p.val;
+                return h`<button key=${p.val} onClick=${() => setVal(String(p.val))} class="p-2.5 rounded border text-left transition ${selected ? 'bg-zinc-200/15 border-white text-white' : 'bg-[#08080a] border-zinc-800 hover:border-zinc-600 text-zinc-300'}">
+                  <div class="font-black text-sm">${p.label}</div>
+                  <div class="text-[10px] text-zinc-400">${lang === 'en' ? p.sub_en : p.sub}</div>
+                </button>`;
+              })}
+            </div>
+          </div>
+
+          <label class="block text-xs text-zinc-300">
+            ${t.customUsdAmount}
+            <input type="number" min="100" step="any" value=${val} onInput=${e => setVal(e.target.value)} class="mt-1.5 text-base font-black text-white"/>
+            <span class="block text-[10.5px] text-emerald-400 font-bold mt-1">${t.equivalent} ${fmtBillion(parsed)} (${usd(parsed)})</span>
+          </label>
+
+          <div class="space-y-1.5">
+            <div class="text-[10.5px] font-bold uppercase text-zinc-400">${t.applyMode}</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onClick=${() => setMode('new')} class="p-2.5 rounded border text-left transition ${mode === 'new' ? 'bg-zinc-200/15 border-white text-white' : 'bg-[#08080a] border-zinc-800 text-zinc-400'}">
+                <b class="block text-xs">${t.newGameMode}</b>
+                <span class="text-[10px] text-zinc-400">${t.newGameDesc}</span>
+              </button>
+              <button onClick=${() => setMode('inject')} class="p-2.5 rounded border text-left transition ${mode === 'inject' ? 'bg-zinc-200/15 border-white text-white' : 'bg-[#08080a] border-zinc-800 text-zinc-400'}">
+                <b class="block text-xs">${t.adjustCashMode}</b>
+                <span class="text-[10px] text-zinc-400">${t.adjustCashDesc}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+            <button onClick=${onClose} class="px-3 py-1.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs">${t.cancel}</button>
+            <button onClick=${() => { onApply(parsed, mode); onClose(); }} class="px-4 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-black text-xs">
+              ${t.applyBtn} ${fmtBillion(parsed)}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma, ema, bb, rsiOn, macdOn, vol, t }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const [hoverPrice, setHoverPrice] = useState(null);
+  const W = 820, H = 370, N = 75, pw = W - 76, bw = pw / N;
+  const hMacd = macdOn ? 52 : 0;
+  const hRsi = rsiOn ? 50 : 0;
+  const hv = vol ? 36 : 0;
+  const ph = H - hv - hRsi - hMacd - 10;
+
+  const st = Math.max(0, a.c.length - N), cs = a.c.slice(st);
+  const closes = a.c.map(x => x.c);
+
+  const calcEmaArr = (arr, period) => {
+    const k = 2 / (period + 1);
+    let prev = arr[0];
+    return arr.map((v, i) => { prev = i === 0 ? v : v * k + prev * (1 - k); return prev; });
+  };
+
+  const sm = closes.map((_, i) => i < 19 ? null : closes.slice(i - 19, i + 1).reduce((s, v) => s + v, 0) / 20).slice(st);
+  const ema12All = calcEmaArr(closes, 12);
+  const ema26All = calcEmaArr(closes, 26);
+  const macdLineAll = ema12All.map((v, i) => v - ema26All[i]);
+  const signalLineAll = calcEmaArr(macdLineAll, 9);
+
+  const em = ema12All.slice(st);
+  const macdSlice = macdLineAll.slice(st);
+  const sigSlice = signalLineAll.slice(st);
+  const histSlice = macdSlice.map((v, i) => v - sigSlice[i]);
+
+  const bBands = closes.map((_, i) => {
+    if (i < 19) return null;
+    const slice = closes.slice(i - 19, i + 1);
+    const mean = slice.reduce((s, v) => s + v, 0) / 20;
+    const std = Math.sqrt(slice.reduce((s, v) => s + (v - mean) ** 2, 0) / 20);
+    return { u: mean + 2 * std, l: mean - 2 * std };
+  }).slice(st);
+
+  const rsiArr = closes.map((_, i) => {
+    if (i < 14) return 50;
+    let gains = 0, losses = 0;
+    for (let j = i - 13; j <= i; j++) {
+      const diff = closes[j] - closes[j - 1];
+      if (diff >= 0) gains += diff; else losses -= diff;
+    }
+    if (losses === 0) return 100;
+    return 100 - (100 / (1 + (gains / 14) / (losses / 14)));
+  }).slice(st);
+
+  const curRsi = rsiArr[rsiArr.length - 1] || 50;
+  const bullPct = Math.max(15, Math.min(85, Math.round(curRsi * 0.6 + 20 + a.bias * 1200)));
+  const bearPct = 100 - bullPct;
+
+  let hi = Math.max(...cs.map(c => c.h)), lo = Math.min(...cs.map(c => c.l));
+  if (bb) bBands.forEach(b => { if (b) { hi = Math.max(hi, b.u); lo = Math.min(lo, b.l); } });
+  if (P.q !== 0) { hi = Math.max(hi, P.avg); lo = Math.min(lo, P.avg); }
+  blitzList.forEach(b => { hi = Math.max(hi, b.entryPx); lo = Math.min(lo, b.entryPx); });
+
+  const pd = (hi - lo) * 0.09 || 1; hi += pd; lo -= pd;
+  const y = v => 8 + (hi - v) / (hi - lo) * (ph - 16);
+  const invY = py => hi - ((py - 8) / (ph - 16)) * (hi - lo);
+  const x = i => 18 + i * bw + bw / 2;
+  const vm = Math.max(...cs.map(c => c.v));
+
+  const ln = (v, col, dash, lbl, bright = false) => v > 0 && v >= lo && v <= hi && h`<g key=${lbl + v}>
+    <line x1="14" x2=${pw} y1=${y(v)} y2=${y(v)} stroke=${col} strokeWidth=${bright ? '1.5' : '1'} strokeDasharray=${dash}/>
+    <rect x=${pw + 2} y=${y(v) - 8} width="70" height="16" rx="2" fill=${bright ? '#fafafa' : col}/>
+    <text x=${W - 4} y=${y(v) + 3.5} textAnchor="end" fill="#09090b" fontSize="9.5" fontWeight="900">${lbl} ${v.toFixed(2)}</text>
+  </g>`;
+
+  const pts = cs.map((c, i) => x(i) + ',' + y(c.c)).join(' ');
+  const hovCandle = hoverIdx !== null && cs[hoverIdx] ? cs[hoverIdx] : cs[cs.length - 1];
+
+  const onMouseMove = e => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relX = ((e.clientX - rect.left) / rect.width) * W;
+    const relY = ((e.clientY - rect.top) / rect.height) * H;
+    const idx = Math.floor((relX - 18) / bw);
+    if (idx >= 0 && idx < cs.length) setHoverIdx(idx);
+    else setHoverIdx(null);
+    if (relY >= 8 && relY <= ph - 8) setHoverPrice(invY(relY));
+    else setHoverPrice(null);
+  };
+
+  const onChartClick = () => {
+    if (drawMode && hoverPrice) onAddLevel(Number(hoverPrice.toFixed(2)));
+  };
+
+  const maxMacd = Math.max(...macdSlice.map(Math.abs), ...sigSlice.map(Math.abs), 0.01);
+  const rsiTop = H - hRsi - hMacd;
+  const macdTop = H - hMacd;
+
+  return h`<div class="relative">
+    <div class="flex flex-wrap items-center gap-3 px-3 py-1 bg-[#08080a] border-b border-zinc-800/80 text-[10.5px]">
+      <span class="text-zinc-500">${t.open}: <b class="text-zinc-200">${hovCandle.o.toFixed(2)}</b></span>
+      <span class="text-zinc-500">${t.high}: <b class="text-emerald-400">${hovCandle.h.toFixed(2)}</b></span>
+      <span class="text-zinc-500">${t.low}: <b class="text-rose-400">${hovCandle.l.toFixed(2)}</b></span>
+      <span class="text-zinc-500">${t.close}: <b class=${cl(hovCandle.c - hovCandle.o)}>${hovCandle.c.toFixed(2)}</b></span>
+      <span class="text-zinc-500">RSI(14): <b class=${curRsi > 70 ? 'text-rose-400' : curRsi < 30 ? 'text-emerald-400' : 'text-zinc-200'}>${curRsi.toFixed(1)}</b></span>
+      <span class="ml-auto text-[10px] text-zinc-500">${t.sentiment}: <b class="text-emerald-400">${bullPct}% ${t.upWord}</b> / <b class="text-rose-400">${bearPct}% ${t.downWord}</b></span>
+    </div>
+
+    <svg viewBox="0 0 ${W} ${H}" onClick=${onChartClick} onMouseMove=${onMouseMove} onMouseLeave=${() => { setHoverIdx(null); setHoverPrice(null); }} class="w-full h-auto block select-none ${drawMode ? 'cursor-cell' : 'cursor-crosshair'} bg-[#08080a]">
+      <defs>
+        <linearGradient id="ar" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#e4e4e7" stopOpacity=".24"/><stop offset="1" stopColor="#e4e4e7" stopOpacity="0"/></linearGradient>
+        <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.7" fill="#27272a" opacity="0.55"/></pattern>
+      </defs>
+
+      <rect x="14" y="0" width=${pw - 14} height=${ph} fill="url(#dots)"/>
+
+      <g>
+        <text x="7" y="11" textAnchor="middle" fill="#10b981" fontSize="8" fontWeight="bold">${bullPct}%</text>
+        <rect x="4" y="15" width="5" height=${(ph - 30) * (bullPct / 100)} fill="#10b981" rx="2"/>
+        <rect x="4" y=${15 + (ph - 30) * (bullPct / 100)} width="5" height=${(ph - 30) * (bearPct / 100)} fill="#f43f5e" rx="2"/>
+        <text x="7" y=${ph - 4} textAnchor="middle" fill="#f43f5e" fontSize="8" fontWeight="bold">${bearPct}%</text>
+      </g>
+
+      ${[0, 1, 2, 3, 4].map(k => {
+        const v = lo + (hi - lo) * k / 4;
+        return h`<g key=${k}><line x1="14" x2=${pw} y1=${y(v)} y2=${y(v)} stroke="#18181b"/><text x=${W - 4} y=${y(v) + 3} textAnchor="end" fill="#71717a" fontSize="10">${v.toFixed(2)}</text></g>`;
+      })}
+
+      ${bb && h`<g>
+        <polyline points=${bBands.map((b, i) => b && x(i) + ',' + y(b.u)).filter(Boolean).join(' ')} fill="none" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="3 3"/>
+        <polyline points=${bBands.map((b, i) => b && x(i) + ',' + y(b.l)).filter(Boolean).join(' ')} fill="none" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="3 3"/>
+      </g>`}
+
+      ${mode === 'c' ? cs.map((c, i) => {
+        const col = c.c >= c.o ? '#10b981' : '#f43f5e';
+        return h`<g key=${i}><line x1=${x(i)} x2=${x(i)} y1=${y(c.h)} y2=${y(c.l)} stroke=${col} strokeWidth="1.2"/><rect x=${x(i) - bw * 0.36} y=${y(Math.max(c.o, c.c))} width=${bw * 0.72} height=${Math.max(1.5, Math.abs(y(c.o) - y(c.c)))} fill=${col} rx="1"/></g>`;
+      }) : h`<g><polygon points=${pts + ' ' + x(cs.length - 1) + ',' + ph + ' ' + x(0) + ',' + ph} fill="url(#ar)"/><polyline points=${pts} fill="none" stroke="#f4f4f5" strokeWidth="2"/></g>`}
+
+      ${sma && h`<polyline points=${sm.map((v, i) => v && x(i) + ',' + y(v)).filter(Boolean).join(' ')} fill="none" stroke="#d4d4d8" strokeWidth="1.4"/>`}
+      ${ema && h`<polyline points=${em.map((v, i) => v && x(i) + ',' + y(v)).filter(Boolean).join(' ')} fill="none" stroke="#38bdf8" strokeWidth="1.4"/>`}
+
+      ${customLevels.map(lvPx => ln(lvPx, lvPx >= a.p ? '#fb7185' : '#34d399', '5 3', lvPx >= a.p ? 'RES' : 'SUP'))}
+
+      ${blitzList.map(b => {
+        const Y = y(b.entryPx);
+        if (Y < 8 || Y > ph - 8) return null;
+        const col = b.dir === 'up' ? '#22c55e' : '#ef4444';
+        return h`<g key=${'bz' + b.id}>
+          <line x1="14" x2=${pw} y1=${Y} y2=${Y} stroke=${col} strokeWidth="1.5" strokeDasharray="4 2"/>
+          <rect x="24" y=${Y - 9} width="125" height="18" rx="3" fill=${col}/>
+          <text x="30" y=${Y + 3.5} fill="#09090b" fontSize="9.5" fontWeight="900">${b.dir === 'up' ? '↗' : '↘'} $${b.stake} · ${b.remSec}s</text>
+        </g>`;
+      })}
+
+      ${ln(a.p, '#ffffff', '2 2', '', true)}
+      ${ln(P.q !== 0 ? P.avg : 0, '#e4e4e7', '6 4', P.q > 0 ? 'LONG' : 'SHRT')}
+      ${ln(P.q !== 0 ? P.sl : 0, '#f43f5e', '2 2', 'SL')}
+      ${ln(P.q !== 0 ? P.tp : 0, '#10b981', '2 2', 'TP')}
+
+      ${hoverIdx !== null && cs[hoverIdx] && h`<g>
+        <line x1=${x(hoverIdx)} x2=${x(hoverIdx)} y1="0" y2=${H} stroke="#52525b" strokeDasharray="3 3" strokeWidth="0.9"/>
+        ${hoverPrice && h`<line x1="14" x2=${pw} y1=${y(hoverPrice)} y2=${y(hoverPrice)} stroke=${drawMode ? '#ffffff' : '#52525b'} strokeDasharray="3 3" strokeWidth="1"/>`}
+      </g>`}
+
+      ${vol && cs.map((c, i) => h`<rect key=${'v' + i} x=${x(i) - bw * 0.35} y=${ph + hv - 2 - c.v / vm * (hv - 6)} width=${bw * 0.7} height=${c.v / vm * (hv - 6)} fill=${c.c >= c.o ? '#10b98138' : '#f43f5e38'}/>`)}
+
+      ${rsiOn && h`<g>
+        <line x1="14" x2=${pw} y1=${rsiTop} y2=${rsiTop} stroke="#27272a"/>
+        <line x1="14" x2=${pw} y1=${rsiTop + hRsi * 0.3} y2=${rsiTop + hRsi * 0.3} stroke="#f43f5e44" strokeDasharray="2 2"/>
+        <line x1="14" x2=${pw} y1=${rsiTop + hRsi * 0.7} y2=${rsiTop + hRsi * 0.7} stroke="#10b98144" strokeDasharray="2 2"/>
+        <polyline points=${rsiArr.map((r, i) => `${x(i)},${rsiTop + hRsi - 4 - (r / 100) * (hRsi - 8)}`).join(' ')} fill="none" stroke="#d4d4d8" strokeWidth="1.4"/>
+        <text x=${W - 6} y=${rsiTop + 12} textAnchor="end" fill="#e4e4e7" fontSize="9" fontWeight="bold">RSI ${curRsi.toFixed(0)}</text>
+      </g>`}
+
+      ${macdOn && h`<g>
+        <line x1="14" x2=${pw} y1=${macdTop} y2=${macdTop} stroke="#27272a"/>
+        <line x1="14" x2=${pw} y1=${macdTop + hMacd / 2} y2=${macdTop + hMacd / 2} stroke="#27272a" strokeDasharray="2 2"/>
+        ${histSlice.map((val, i) => {
+          const barH = (Math.abs(val) / maxMacd) * (hMacd / 2 - 4);
+          const barY = val >= 0 ? macdTop + hMacd / 2 - barH : macdTop + hMacd / 2;
+          return h`<rect key=${'mh' + i} x=${x(i) - bw * 0.3} y=${barY} width=${bw * 0.6} height=${Math.max(1, barH)} fill=${val >= 0 ? '#10b98166' : '#f43f5e66'}/>`;
+        })}
+        <polyline points=${macdSlice.map((v, i) => `${x(i)},${macdTop + hMacd / 2 - (v / maxMacd) * (hMacd / 2 - 4)}`).join(' ')} fill="none" stroke="#fafafa" strokeWidth="1.2"/>
+        <polyline points=${sigSlice.map((v, i) => `${x(i)},${macdTop + hMacd / 2 - (v / maxMacd) * (hMacd / 2 - 4)}`).join(' ')} fill="none" stroke="#71717a" strokeWidth="1.2"/>
+        <text x=${W - 6} y=${macdTop + 11} textAnchor="end" fill="#d4d4d8" fontSize="9" fontWeight="bold">MACD</text>
+      </g>`}
+    </svg>
+  </div>`;
+}
+
+function HeatmapView({ assets, onSelect, t }) {
+  return h`<div class="p-3 space-y-3">
+    <div class="flex justify-between items-center text-xs">
+      <b class="text-zinc-100 uppercase tracking-wider">${t.heatmapTitle}</b>
+      <span class="text-[10px] text-zinc-500">${t.heatmapSub}</span>
+    </div>
+    <div class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
+      ${Object.keys(SEC).map(secKey => {
+        const list = assets.filter(x => x.sec === secKey).sort((a, b) => (b.p * b.sh) - (a.p * a.sh));
+        return h`<div key=${secKey} class="p-2 rounded bg-[#08080a] border border-zinc-800">
+          <div class="text-[10px] font-bold uppercase text-zinc-200 mb-1.5">${t.sectors[secKey]}</div>
+          <div class="flex flex-wrap gap-1">
+            ${list.map(x => {
+              const chg = x.p / x.d0 - 1;
+              const bg = chg > 0.025 ? 'bg-emerald-600 text-white' : chg > 0 ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-500/40' : chg < -0.025 ? 'bg-rose-600 text-white' : 'bg-rose-500/25 text-rose-200 border border-rose-500/40';
+              const cap = x.p * x.sh;
+              const grow = cap > 1500000 ? 'flex-[2_1_95px]' : cap > 300000 ? 'flex-[1.4_1_75px]' : 'flex-[1_1_62px]';
+              return h`<button key=${x.sym} onClick=${() => onSelect(x.sym)} class="${grow} ${bg} p-1.5 rounded flex flex-col items-center justify-center text-center transition hover:scale-[1.03]">
+                <div class="flex items-center gap-1 font-black text-[11px]"><${AssetLogo} sym=${x.sym} size=${14}/><span>${x.sym}</span></div>
+                <div class="text-[9.5px] font-bold mt-0.5">${pc(chg)}</div>
+                <div class="text-[8.5px] opacity-80">${fmtCap(cap)}</div>
+              </button>`;
+            })}
+          </div>
+        </div>`;
+      })}
+    </div>
+  </div>`;
+}
+
+function BenchmarkChart({ eqHist, spyHist, t }) {
+  const W = 780, H = 190;
+  const all = [...eqHist, ...spyHist];
+  const min = Math.min(...all) * 0.995, max = Math.max(...all) * 1.005 || 1.01;
+  const x = i => 10 + (i / Math.max(1, eqHist.length - 1)) * (W - 20);
+  const y = v => H - 15 - ((v - min) / (max - min)) * (H - 30);
+  const pEq = eqHist.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+  const pSpy = spyHist.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+  const myRet = eqHist[eqHist.length - 1] - 1;
+  const spyRet = spyHist[spyHist.length - 1] - 1;
+
+  return h`<div class="p-3">
+    <div class="flex justify-between items-center mb-2 text-xs">
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-white inline-block"></span> ${t.yourFundLabel} <b class=${cl(myRet)}>${pc(myRet)}</b></span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-zinc-500 inline-block"></span> S&P 500: <b class=${cl(spyRet)}>${pc(spyRet)}</b></span>
+      </div>
+      <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-200 border border-zinc-800">Alpha: <b class=${cl(myRet - spyRet)}>${pc(myRet - spyRet)}</b></span>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto bg-[#08080a] rounded border border-zinc-800">
+      <line x1="0" x2=${W} y1=${y(1)} y2=${y(1)} stroke="#27272a" strokeDasharray="4 4"/>
+      <polyline points=${pSpy} fill="none" stroke="#71717a" strokeWidth="1.8" opacity="0.85"/>
+      <polyline points=${pEq} fill="none" stroke="#fafafa" strokeWidth="2.4"/>
+    </svg>
+  </div>`;
+}
+
+function Book({ a, onPickPrice, t }) {
+  const K = 7;
+  const as = [...Array(K)].map((_, i) => lv(a, 1, i)).reverse();
+  const bs = [...Array(K)].map((_, i) => lv(a, -1, i));
+  const mx = Math.max(...as.map(x => x.sz), ...bs.map(x => x.sz));
+  const row = (x, c, bg) => h`<div key=${x.px} onClick=${() => onPickPrice && onPickPrice(x.px.toFixed(2))} class="relative flex justify-between px-1.5 py-0.5 cursor-pointer hover:bg-white/5 rounded"><div class="absolute inset-y-0 right-0 ${bg} rounded-r" style=${{ width: (x.sz / mx * 100) + '%' }}></div><span class="relative font-medium ${c}">${x.px.toFixed(2)}</span><span class="relative text-zinc-300">${x.sz < 10 ? x.sz.toFixed(2) : Math.round(x.sz)}</span></div>`;
+  return h`<div class="text-[11px] space-y-0.5">
+    <div class="flex justify-between px-1.5 text-[10px] text-zinc-500 uppercase"><span>${t.priceCol}</span><span>${t.volCol}</span></div>
+    ${as.map(x => row(x, 'text-rose-400', 'bg-rose-500/15'))}
+    <div class="my-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-800 flex justify-between items-center font-bold ${cl(a.p - a.d0)}">
+      <span>${usd(a.p)}</span>
+      <span class="text-[10px] text-zinc-500 font-normal">Spread ${((as[K - 1].px - bs[0].px) / a.p * 100).toFixed(2)}%</span>
+    </div>
+    ${bs.map(x => row(x, 'text-emerald-400', 'bg-emerald-500/15'))}
+  </div>`;
+}
+
+const NewsCard = ({ w, g, full, featured = false, onSelectAsset, onOpenArticle, lang, t }) => {
+  const headline = lang === 'en' ? (w.h_en || w.h) : w.h;
+  const body = lang === 'en' ? (w.b_en || w.b) : w.b;
+  const category = lang === 'en' ? (w.cat_en || w.cat || w.tag) : (w.cat || w.tag);
+  return h`
+  <article onClick=${() => onOpenArticle && onOpenArticle(w)} class="p-3 border-b border-zinc-800/80 hover:bg-zinc-900/90 transition cursor-pointer group ${featured ? 'bg-gradient-to-b from-zinc-900/95 to-[#0a0a0c] border-l-2 border-l-white' : ''}">
+    <div class="flex justify-between items-center text-[10px] text-zinc-400 mb-1.5 gap-2">
+      <div class="flex items-center gap-1.5 min-w-0">
+        ${featured && h`<span class="px-1.5 py-0.2 rounded bg-white text-black font-black text-[8.5px] tracking-wider uppercase shrink-0">${t.leadBadge}</span>`}
+        <${MediaLogo} outlet=${w.outlet} size=${14}/>
+        <span class="font-bold text-zinc-200 truncate">${w.outlet?.name || 'Bloomberg Markets'}</span>
+        <span class="text-zinc-600">·</span>
+        <span class="text-zinc-500 shrink-0">${w.realTime}</span>
+      </div>
+      <span class="px-1.5 py-0.5 rounded font-bold shrink-0 ${w.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : w.tag === 'EARNINGS' ? 'bg-zinc-200/15 text-zinc-200 border border-zinc-600' : 'bg-zinc-800 text-zinc-300'}">${category}</span>
+    </div>
+
+    <div class="font-bold text-zinc-100 group-hover:text-white transition ${featured ? 'text-[13.5px]' : full ? 'text-sm' : 'text-[12px]'} leading-snug mb-1">${headline}</div>
+    <p class="text-zinc-400 text-[11px] leading-relaxed mb-2">${body}</p>
+
+    ${featured && w.metrics && h`
+      <div class="grid grid-cols-3 gap-1.5 mb-2">
+        ${w.metrics.map((m, i) => h`<div key=${i} class="px-2 py-1 rounded bg-[#060607] border border-zinc-800/90">
+          <div class="text-[8.5px] uppercase text-zinc-500 truncate">${m.label}</div>
+          <div class="text-[10px] font-black truncate ${m.tone === 'pos' ? 'text-emerald-400' : m.tone === 'neg' ? 'text-rose-400' : 'text-zinc-200'}">${m.val}</div>
+        </div>`)}
+      </div>
+    `}
+
+    <div class="flex flex-wrap items-center justify-between gap-1.5">
+      <div class="flex flex-wrap gap-1.5">
+        ${Object.entries(w.sg).slice(0, 5).map(([s, v]) => g.a[s] && h`
+          <button key=${s} onClick=${e => { e.stopPropagation(); onSelectAsset(s); }} class="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold border transition hover:scale-105 ${v > 0 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/15 border-rose-500/30 text-rose-300'}">
+            <${AssetLogo} sym=${s} size=${14}/>
+            <span>${v > 0 ? '▲' : '▼'} ${s}</span>
+          </button>
+        `)}
+      </div>
+      <span class="text-[10px] font-bold text-zinc-300 group-hover:text-white group-hover:underline">${t.readFullReport}</span>
+    </div>
+  </article>
+`;
+};
+
+function NewsPortalModal({ open, onClose, nl, g, nf, setNf, newsQuery, setNewsQuery, onTriggerNews, onSelectAsset, onOpenArticle, lang, t }) {
+  if (!open) return null;
+  const lead = nl[0];
+  const secondary = nl.slice(1, 5);
+  const wire = nl.slice(5);
+
+  return h`
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-5" onClick=${onClose}>
+      <div class="${PN} flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden border-zinc-700" onClick=${e => e.stopPropagation()}>
+        <div class="border-b border-zinc-800 bg-[#060607] p-3.5 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="px-2 py-0.5 rounded bg-white text-black font-black text-[10px] tracking-widest uppercase">${t.globalEdition}</span>
+              <b class="text-white text-sm sm:text-base tracking-tight">${t.portalTitle}</b>
+              <span class="hidden md:inline text-[11px] text-zinc-500">· ${tm(g.d, g.tk, lang)} · ${nl.length} ${t.dispatches}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onClick=${() => onTriggerNews(true)} class="rounded bg-zinc-800 border border-zinc-700 px-2.5 py-1 text-[11px] font-bold text-zinc-200 hover:bg-zinc-700">⚡ Earnings</button>
+              <button onClick=${() => onTriggerNews(false)} class="rounded bg-zinc-200 text-zinc-950 px-2.5 py-1 text-[11px] font-black hover:bg-white">${t.newDispatch}</button>
+              <button onClick=${onClose} class="rounded border border-zinc-700 px-3 py-1 text-[11px] text-zinc-300 hover:text-white hover:bg-zinc-800">${t.closeEsc}</button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap gap-1 flex-1">
+              ${['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setNf(k)} class="px-2 py-0.5 rounded text-[10px] font-bold transition ${nf === k ? 'bg-white text-black' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'}">${k === 'all' ? t.allSections : t.sectors[k]}</button>`)}
+            </div>
+            <input placeholder=${t.filterNewsPlaceholder} value=${newsQuery} onInput=${e => setNewsQuery(e.target.value)} class="w-full sm:w-64 py-1 text-[11px]"/>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto p-4 space-y-4">
+          ${lead ? h`
+            <div class="grid gap-4 lg:grid-cols-[1.45fr_1fr]">
+              <div onClick=${() => { onClose(); onOpenArticle(lead); }} class="p-4 rounded-md bg-gradient-to-br from-zinc-900 via-[#0d0d0f] to-[#08080a] border border-zinc-700 hover:border-zinc-400 transition cursor-pointer flex flex-col justify-between space-y-3">
+                <div class="space-y-2.5">
+                  <div class="flex items-center justify-between text-[10.5px]">
+                    <div class="flex items-center gap-2">
+                      <${MediaLogo} outlet=${lead.outlet} size=${16}/>
+                      <b class="text-white">${lead.outlet?.name || 'Bloomberg Markets'}</b>
+                      <span class="text-zinc-500">· ${lead.author || 'Global Desk'}</span>
+                    </div>
+                    <span class="px-2 py-0.5 rounded font-black ${lead.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : 'bg-zinc-200 text-black'}">${lang === 'en' ? (lead.cat_en || lead.cat) : (lead.cat || lead.tag)}</span>
+                  </div>
+                  <h2 class="text-lg sm:text-xl font-black text-white leading-tight">${lang === 'en' ? (lead.h_en || lead.h) : lead.h}</h2>
+                  <p class="text-xs text-zinc-300 leading-relaxed">${lang === 'en' ? (lead.b_en || lead.b) : lead.b}</p>
+                  <p class="text-[11px] text-zinc-400 leading-relaxed border-l-2 border-zinc-600 pl-2.5">${lang === 'en' ? (lead.w_en || lead.w) : lead.w}</p>
+                </div>
+
+                <div class="space-y-2.5 pt-2 border-t border-zinc-800">
+                  ${lead.metrics && h`<div class="grid grid-cols-3 gap-2">
+                    ${lead.metrics.map((m, idx) => h`<div key=${idx} class="p-2 rounded bg-[#060607] border border-zinc-800">
+                      <div class="text-[9px] uppercase text-zinc-500">${m.label}</div>
+                      <div class="text-xs font-black ${m.tone === 'pos' ? 'text-emerald-400' : m.tone === 'neg' ? 'text-rose-400' : 'text-white'}">${m.val}</div>
+                    </div>`)}
+                  </div>`}
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap gap-1.5">
+                      ${Object.entries(lead.sg).map(([s, v]) => g.a[s] && h`
+                        <button key=${s} onClick=${e => { e.stopPropagation(); onSelectAsset(s); onClose(); }} class="flex items-center gap-1.5 px-2 py-1 rounded text-[10.5px] font-bold border ${v > 0 ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'}">
+                          <${AssetLogo} sym=${s} size=${14}/><span>${v > 0 ? '▲' : '▼'} ${s}</span>
+                        </button>
+                      `)}
+                    </div>
+                    <span class="text-xs font-black text-white underline">${t.openFullReport}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-md border border-zinc-800 bg-[#08080a] divide-y divide-zinc-800/90 overflow-hidden">
+                <div class="px-3 py-2 bg-[#060607] text-[10px] font-black uppercase tracking-wider text-zinc-300">${t.featuredAnalysis}</div>
+                ${secondary.map(w => h`<${NewsCard} key=${w.id} w=${w} g=${g} full=${false} lang=${lang} t=${t} onSelectAsset=${s => { onSelectAsset(s); onClose(); }} onOpenArticle=${art => { onClose(); onOpenArticle(art); }}/>`)}
+              </div>
+            </div>
+          ` : h`<p class="p-8 text-center text-zinc-500">${t.noMatchingNews}</p>`}
+
+          ${wire.length > 0 && h`
+            <div class="rounded-md border border-zinc-800 bg-[#08080a] overflow-hidden">
+              <div class="px-3.5 py-2 bg-[#060607] border-b border-zinc-800 flex justify-between items-center">
+                <b class="text-[10.5px] uppercase tracking-wider text-zinc-200">${t.liveWireTitle}</b>
+                <span class="text-[10px] text-zinc-500">${wire.length} ${t.additionalBulletins}</span>
+              </div>
+              <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-800/80">
+                ${wire.map(w => h`<${NewsCard} key=${w.id} w=${w} g=${g} full=${false} lang=${lang} t=${t} onSelectAsset=${s => { onSelectAsset(s); onClose(); }} onOpenArticle=${art => { onClose(); onOpenArticle(art); }}/>`)}
+              </div>
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function ArticleReaderModal({ item, g, onClose, onSelectAsset, onSelectArticle, lang, t }) {
+  if (!item) return null;
+  const related = g.N.filter(n => n.id !== item.id && (n.cat === item.cat || n.sy.some(s => item.sy.includes(s)))).slice(0, 3);
+  const headline = lang === 'en' ? (item.h_en || item.h) : item.h;
+  const whyText = lang === 'en' ? (item.w_en || item.w) : item.w;
+  const category = lang === 'en' ? (item.cat_en || item.cat || item.tag) : (item.cat || item.tag);
+
+  return h`<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" onClick=${onClose}>
+    <div class="rounded-md border border-zinc-700 bg-[#0c0c0e] flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden shadow-2xl" onClick=${e => e.stopPropagation()}>
+      <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-800 bg-[#060607]">
+        <div class="flex items-center gap-2.5">
+          <${MediaLogo} outlet=${item.outlet} size=${18}/>
+          <span class="font-bold text-white text-xs">${item.outlet?.name || 'Bloomberg Markets'}</span>
+          <span class="text-zinc-600">|</span>
+          <span class="px-2 py-0.5 rounded bg-zinc-200 text-zinc-950 font-black text-[10px] tracking-wider uppercase">${category}</span>
+          <span class="hidden sm:inline text-[11px] text-zinc-400">${tm(item.d, item.tk, lang)}</span>
+        </div>
+        <button onClick=${onClose} class="px-2.5 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs font-bold">✕ ${t.closeEsc}</button>
+      </div>
+
+      <div class="overflow-y-auto p-6 space-y-5">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">${headline}</h1>
+          <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-zinc-400 border-b border-zinc-800 pb-3">
+            <span class="font-semibold text-zinc-200">${item.author || 'Institutional Desk'}</span>
+            <span>·</span>
+            <span>${t.publishedAt} ${item.realTime}</span>
+          </div>
+        </div>
+
+        ${item.metrics && item.metrics.length > 0 && h`
+          <div class="grid grid-cols-3 gap-2.5">
+            ${item.metrics.map((m, idx) => h`
+              <div key=${idx} class="p-2.5 rounded bg-[#060607] border border-zinc-800">
+                <div class="text-[9.5px] uppercase text-zinc-500 font-bold">${m.label}</div>
+                <div class="text-xs sm:text-sm font-black mt-0.5 ${m.tone === 'pos' ? 'text-emerald-400' : m.tone === 'neg' ? 'text-rose-400' : 'text-white'}">${m.val}</div>
+              </div>
+            `)}
+          </div>
+        `}
+
+        <div class="p-3.5 rounded bg-zinc-900/90 border-l-4 border-zinc-200 text-xs text-zinc-200 leading-relaxed">
+          <b class="text-white uppercase block mb-1">${t.marketImpactKeys}</b>
+          ${whyText}
+        </div>
+
+        <div class="space-y-3.5 text-[13px] text-zinc-300 leading-relaxed font-sans">
+          ${(item.article || [item.b, item.w]).map((p, idx) => h`<p key=${idx}>${p}</p>`)}
+        </div>
+
+        ${item.quote && h`
+          <blockquote class="p-4 rounded bg-[#08080a] border border-zinc-800 italic text-zinc-200 text-xs leading-relaxed">
+            <p class="mb-1.5">${item.quote.text}</p>
+            <footer class="not-italic text-[10.5px] font-bold text-zinc-400">— ${item.quote.by}</footer>
+          </blockquote>
+        `}
+
+        <div class="pt-3 border-t border-zinc-800">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5">${t.impactedCompanies}</div>
+          <div class="grid gap-2 sm:grid-cols-2">
+            ${Object.entries(item.sg).map(([sym, dir]) => {
+              const asset = g.a[sym];
+              if (!asset) return null;
+              const snap = item.snapPx?.[sym] || asset.d0;
+              const sinceNews = asset.p / snap - 1;
+              return h`<div key=${sym} class="flex items-center justify-between p-2.5 rounded bg-[#060607] border border-zinc-800">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <${AssetLogo} sym=${sym} size=${26}/>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <b class="text-white text-xs">${sym}</b>
+                      <span class="text-[10px] text-zinc-400 truncate max-w-[110px]">${asset.name}</span>
+                    </div>
+                    <div class="text-[11px] mt-0.5">
+                      <span class="text-zinc-200 font-bold">${usd(asset.p)}</span>
+                      <span class="ml-2 text-[10px] ${cl(sinceNews)}">(${pc(sinceNews)} ${t.sinceAlert})</span>
+                    </div>
+                  </div>
+                </div>
+                <button onClick=${() => { onSelectAsset(sym); onClose(); }} class="px-2.5 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition shrink-0 ${dir > 0 ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-rose-600 hover:bg-rose-500 text-white'}">
+                  ${t.tradeBtn} ${sym}
+                </button>
+              </div>`;
+            })}
+          </div>
+        </div>
+
+        ${related.length > 0 && h`
+          <div class="pt-3 border-t border-zinc-800">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">${t.relatedCoverage}</div>
+            <div class="space-y-1.5">
+              ${related.map(r => h`<button key=${r.id} onClick=${() => onSelectArticle(r)} class="w-full text-left p-2 rounded bg-zinc-900/60 hover:bg-zinc-800 border border-zinc-800/80 flex justify-between items-center gap-2 transition">
+                <div class="flex items-center gap-2 min-w-0">
+                  <${MediaLogo} outlet=${r.outlet} size=${14}/>
+                  <span class="text-xs text-zinc-200 font-semibold truncate">${lang === 'en' ? (r.h_en || r.h) : r.h}</span>
+                </div>
+                <span class="text-[10px] text-zinc-300 shrink-0">${t.readArrow}</span>
+              </button>`)}
+            </div>
+          </div>
+        `}
+      </div>
+    </div>
+  </div>`;
+}
+
+function App() {
+  const [, fr] = useReducer(x => x + 1, 0);
+  const G = useRef(null);
+  if (!G.current) {
+    const saved = loadGame();
+    G.current = mkGame(saved?.k0 || 1e8, saved);
+  }
+  const g = G.current;
+
+  const [lang, setLang] = useState('es');
+  const t = I18N[lang];
+
+  const [sp, setSp] = useState(1);
+  const [sel, setSel] = useState('NVDA');
+  const [srch, setSrch] = useState('');
+  const [sf, setSf] = useState('all');
+  const [sortBy, setSortBy] = useState('cap');
+  const [nm, setNm] = useState(false);
+  const [capModalOpen, setCapModalOpen] = useState(false);
+  const [activeArticle, setActiveArticle] = useState(null);
+  const [cap, setCap] = useState(g.k0 || 1e8);
+
+  const [tradeMode, setTradeMode] = useState('actions');
+  const [blitzSec, setBlitzSec] = useState(30);
+  const [blitzStake, setBlitzStake] = useState('1000');
+
+  const [optType, setOptType] = useState('CALL');
+  const [optStrike, setOptStrike] = useState('');
+  const [optDays, setOptDays] = useState(3);
+  const [optContracts, setOptContracts] = useState('5');
+
+  const [byUsd, setByUsd] = useState(false);
+  const [orderType, setOrderType] = useState('market');
+  const [limitPx, setLimitPx] = useState('');
+  const [lev, setLev] = useState(1);
+  const [mode, setMode] = useState('c');
+  const [sma, setSma] = useState(true);
+  const [ema, setEma] = useState(false);
+  const [bb, setBb] = useState(false);
+  const [rsiOn, setRsiOn] = useState(true);
+  const [macdOn, setMacdOn] = useState(true);
+  const [vol] = useState(true);
+  const [drawMode, setDrawMode] = useState(false);
+  const [q, setQ] = useState('10');
+  const [sl, setSl] = useState('');
+  const [tp, setTp] = useState('');
+  const [bankAmt, setBankAmt] = useState('500000');
+  const [alertPx, setAlertPx] = useState('');
+  const [billSearch, setBillSearch] = useState('');
+  const [msg, setMsg] = useState('');
+  const [nf, setNf] = useState('all');
+  const [newsQuery, setNewsQuery] = useState('');
+  const [tab, setTab] = useState('p');
+  const [timer, setTimer] = useState(180);
+  const [breaking, setBreaking] = useState(null);
+  const [breakingRem, setBreakingRem] = useState(0);
+  const searchInputRef = useRef(null);
+
+  const selectAsset = useCallback((sym) => {
+    setSel(sym);
+    setOptStrike(String(Math.round(g.a[sym].p)));
+    if (!g.openTabs.includes(sym)) g.openTabs = [sym, ...g.openTabs].slice(0, 6);
+  }, [g]);
+
+  const toggleFav = useCallback((e, sym) => {
+    e.stopPropagation();
+    if (g.favs.includes(sym)) g.favs = g.favs.filter(x => x !== sym);
+    else g.favs.push(sym);
+    saveGame(g);
+    fr();
+  }, [g]);
+
+  useEffect(() => {
+    g.onBreaking = (item) => {
+      setBreaking(item);
+      setBreakingRem(45);
+      fr();
+    };
+  }, [g]);
+
+  useEffect(() => {
+    let secCounter = 0;
+    const id = setInterval(() => {
+      tickBlitzSecond(g);
+      secCounter++;
+      if (secCounter % 10 === 0) saveGame(g);
+
+      setBreakingRem(rem => {
+        if (rem <= 1) {
+          setBreaking(null);
+          return 0;
+        }
+        return rem - 1;
+      });
+
+      setTimer(tmr => {
+        if (tmr === 45 && g.upgrades?.radar && !g.rumor) {
+          const nextT = pickNextNews();
+          g.rumor = { template: nextT, headline: nextT.h, headline_en: nextT.h_en, syms: nextT.sg.map(x => x[0]).join(', ') };
+        }
+        if (tmr <= 1) {
+          if (Math.random() < 0.25) specialEvent(g);
+          else fire(g);
+          fr();
+          return 180;
+        }
+        return tmr - 1;
+      });
+      fr();
+    }, 1000);
+    return () => clearInterval(id);
+  }, [g]);
+
+  useEffect(() => {
+    if (!sp) return;
+    const id = setInterval(() => { tick(G.current); fr(); }, 1000 / sp);
+    return () => clearInterval(id);
+  }, [sp]);
+
+  useEffect(() => {
+    const f = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'Escape') {
+        setActiveArticle(null);
+        setNm(false);
+        setCapModalOpen(false);
+        setBreaking(null);
+        setDrawMode(false);
+      } else if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        setSp(s => (s === 0 ? 1 : 0));
+      }
+    };
+    addEventListener('keydown', f);
+    return () => removeEventListener('keydown', f);
+  }, []);
+
+  const a = g.a[sel];
+  const P = g.P[sel] || { q: 0, avg: 0, margin: 0, lev: 1, div: 0, rl: 0, sl: 0, tp: 0 };
+  const n = Math.max(0, Math.min(1e9, Math.floor((+q || 0) * 1e4) / 1e4));
+  const E = eq(g);
+  const c0 = a.p / a.d0 - 1;
+  const maxLevAllowed = getMaxLev(g);
+
+  const nb = byUsd ? uf(a, 'buy', +q || 0, lev, g) : n;
+  const ns = byUsd ? uf(a, 'sell', +q || 0, lev, g) : n;
+
+  const pos = useMemo(() => Object.entries(g.P).filter(([, p]) => p.q !== 0), [g.P, g.tk, g.d, g.stats.trades]);
+  const totalMargin = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.margin, 0), [g.P, g.tk, g.stats.trades]);
+  const totalRealized = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.rl, 0), [g.P, g.tk, g.stats.trades]);
+
+  const unlockedCount = Object.keys(g.unlocked).length;
+  const activeBlitzForSel = (g.B || []).filter(b => b.sym === sel);
+  const customLevelsForSel = g.levels[sel] || [];
+
+  const go = side => {
+    if (orderType === 'limit') {
+      const target = +limitPx;
+      const err = addLimitOrder(g, sel, side, side === 'buy' ? nb : ns, target, lev);
+      setMsg(err || `${lang === 'en' ? 'Limit Order' : 'Orden Límite'} ${side.toUpperCase()} @ ${usd(target)}`);
+      saveGame(g);
+      fr();
+      return;
+    }
+    const e = exec(g, sel, side, side === 'buy' ? nb : ns, lev);
+    if (!e) {
+      const p = g.P[sel];
+      if (p && p.q !== 0) {
+        if (+sl > 0) p.sl = +sl;
+        if (+tp > 0) p.tp = +tp;
+      }
+      saveGame(g);
+    }
+    setMsg(e || (lang === 'en' ? (side === 'buy' ? 'Buy order executed' : 'Sell / short order executed') : (side === 'buy' ? 'Orden de compra ejecutada' : 'Orden de venta / short ejecutada')));
+    fr();
+  };
+
+  const goBlitz = dir => {
+    const err = openBlitzOption(g, sel, dir, +blitzStake, blitzSec, 0.92);
+    setMsg(err || (lang === 'en' ? `Blitz ${dir.toUpperCase()} opened (${blitzSec}s)` : `Opción Blitz ${dir === 'up' ? 'SUBE ↗' : 'BAJA ↘'} abierta (${blitzSec}s)`));
+    saveGame(g);
+    fr();
+  };
+
+  const goOption = () => {
+    const strike = +optStrike || Math.round(a.p);
+    const err = buyOptionContract(g, sel, optType, strike, optDays, +optContracts);
+    setMsg(err || (lang === 'en' ? `${optType} Contract Strike $${strike} purchased (${optDays}d)` : `Contrato ${optType} Strike $${strike} comprado (${optDays} días)`));
+    saveGame(g);
+    fr();
+  };
+
+  const setLv = () => {
+    if (P.q !== 0) {
+      g.P[sel].sl = +sl || 0;
+      g.P[sel].tp = +tp || 0;
+      setMsg(lang === 'en' ? 'Stop Loss / Take Profit updated' : 'Niveles Stop Loss / Take Profit actualizados');
+      saveGame(g);
+    } else setMsg(lang === 'en' ? 'Open a position first' : 'Abre una posición primero');
+    fr();
+  };
+
+  const triggerManualNews = (special = false) => {
+    if (special) specialEvent(g);
+    else fire(g);
+    setTimer(180);
+    fr();
+  };
+
+  const skip = () => {
+    const d = g.d;
+    let i = 0;
+    while (g.d === d && i++ < 60) tick(g);
+    setMsg(lang === 'en' ? 'New trading day started' : 'Nuevo día bursátil iniciado');
+    fr();
+  };
+
+  const applyCapitalChange = (newAmount, applyMode) => {
+    setCap(newAmount);
+    if (applyMode === 'new') {
+      localStorage.removeItem(SAVE_KEY);
+      G.current = mkGame(newAmount);
+      G.current.onBreaking = (item) => {
+        setBreaking(item);
+        setBreakingRem(45);
+        fr();
+      };
+      saveGame(G.current);
+      setSp(1);
+      setTimer(180);
+      setBreaking(null);
+      setBreakingRem(0);
+      setActiveArticle(null);
+      setMsg((lang === 'en' ? 'New session started with ' : 'Nueva partida iniciada con capital de ') + fmtBillion(newAmount));
+    } else {
+      const diff = newAmount - g.cash;
+      g.cash = newAmount;
+      g.k0 = Math.max(100, g.k0 + diff);
+      g.A.forEach((asset, idx) => {
+        const baseLiq = AS[idx]?.[5] || 5000;
+        asset.liq = baseLiq * Math.max(1, newAmount / 1e6);
+      });
+      saveGame(g);
+      setMsg((lang === 'en' ? 'Available cash updated to ' : 'Efectivo disponible actualizado a ') + fmtBillion(newAmount));
+    }
+    fr();
+  };
+
+  const rst = () => {
+    applyCapitalChange(cap, 'new');
+  };
+
+  const exportSave = () => {
+    saveGame(g);
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(localStorage.getItem(SAVE_KEY) || '{}');
+    const dl = document.createElement('a');
+    dl.setAttribute('href', dataStr);
+    dl.setAttribute('download', `SIM_MARKET_Corporate_Day_${g.d + 1}.json`);
+    document.body.appendChild(dl);
+    dl.click();
+    dl.remove();
+    setMsg(lang === 'en' ? 'Session exported as .JSON' : 'Partida exportada en archivo .JSON');
+  };
+
+  const billionairesRanking = useMemo(() => {
+    const userItem = {
+      id: 'user', rank: 0, name: t.youManager, country: t.yourFund,
+      val: E, chg: E - g.k0, ret: E / g.k0 - 1, isUser: true, mainSym: sel
+    };
+    const list = g.billionaires.map(b => {
+      const val = calcBillionaireVal(b, g);
+      return {
+        id: b.id, name: b.name, country: b.country, val,
+        chg: val - b.baseVal, ret: val / b.baseVal - 1,
+        isUser: false, mainSym: b.holdings[0]?.sym || 'SPY',
+        holdings: b.holdings
+      };
+    });
+    const combined = [userItem, ...list].sort((x, y) => y.val - x.val);
+    combined.forEach((item, idx) => item.rank = idx + 1);
+    return combined;
+  }, [E, g.k0, g.billionaires, g.tk, g.d, sel, t]);
+
+  const userRank = billionairesRanking.find(x => x.isUser)?.rank || 101;
+  const filteredBillionaires = useMemo(() => billionairesRanking.filter(b =>
+    b.isUser || (b.name + b.country + (b.holdings?.map(x => x.sym).join(' ') || '')).toLowerCase().includes(billSearch.trim().toLowerCase())
+  ), [billionairesRanking, billSearch]);
+
+  const nl = useMemo(() => {
+    const qLower = newsQuery.trim().toLowerCase();
+    return g.N.filter(w => {
+      const matchSec = nf === 'all' || w.sy.some(s => SEC[nf]?.includes(s));
+      if (!matchSec) return false;
+      if (!qLower) return true;
+      return (w.h + ' ' + (w.h_en || '') + ' ' + w.b + ' ' + (w.b_en || '') + ' ' + (w.cat || '') + ' ' + w.sy.join(' ')).toLowerCase().includes(qLower);
+    });
+  }, [g.N, g.id, nf, newsQuery]);
+
+  const fc = ['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setNf(k)} class="px-2 py-0.5 rounded text-[10px] font-medium transition ${nf === k ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'}">${k === 'all' ? t.allFem : t.sectors[k]}</button>`);
+
+  const al = useMemo(() => {
+    return g.A
+      .filter(x => {
+        const matchSec = sf === 'all' ? true : sf === 'favs' ? g.favs.includes(x.sym) : x.sec === sf;
+        return matchSec && (x.sym + x.name).toLowerCase().includes(srch.trim().toLowerCase());
+      })
+      .sort((x, y) => {
+        if (sortBy === 'cap') return (y.p * y.sh) - (x.p * x.sh);
+        if (sortBy === 'chg') return (y.p / y.d0 - 1) - (x.p / x.d0 - 1);
+        return y.p - x.p;
+      });
+  }, [g.A, sf, srch, sortBy, g.tk, g.d, g.favs]);
+
+  const riskReward = useMemo(() => {
+    const slVal = +sl, tpVal = +tp;
+    if (!(slVal > 0) || !(tpVal > 0)) return null;
+    const risk = Math.abs(a.p - slVal);
+    const reward = Math.abs(tpVal - a.p);
+    if (risk === 0) return null;
+    return (reward / risk).toFixed(2);
+  }, [a.p, sl, tp]);
+
+  const th = (...cols) => h`<tr class="text-[10px] uppercase tracking-wider text-zinc-500 bg-[#060607]">${cols.map(x => h`<th key=${x}>${x}</th>`)}</tr>`;
+  const curPosPnl = P.q > 0 ? (a.p - P.avg) * P.q : P.q < 0 ? (P.avg - a.p) * Math.abs(P.q) : 0;
+
+  return h`
+  <div class="min-h-screen text-[12px] flex flex-col">
+    <header class="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-zinc-800/90 bg-[#060607] sticky top-0 z-30">
+      <div class="flex items-center mr-1 select-none">
+        <svg viewBox="0 0 220 44" class="h-9 w-auto" fill="none">
+          <rect width="220" height="44" rx="4" fill="#060607"/>
+          <g transform="translate(4, 6)">
+            <polygon points="8,1 24,1 31,8 31,24 24,31 8,31 1,24 1,8" fill="#060607" stroke="#ffffff" strokeWidth="1.6"/>
+            <rect x="8.5" y="17" width="3" height="7" rx="0.5" fill="#71717a"/>
+            <rect x="14.5" y="12" width="3" height="12" rx="0.5" fill="#d4d4d8"/>
+            <rect x="20.5" y="7" width="3" height="17" rx="0.5" fill="#ffffff"/>
+          </g>
+          <text x="44" y="21" fill="#ffffff" fontSize="14" fontWeight="900" letterSpacing="1.2">
+            SIM<tspan fill="#a1a1aa">·</tspan>MARKET
+          </text>
+          <text x="44" y="33" fill="#71717a" fontSize="8.5" fontWeight="700" letterSpacing="2.4">
+            INSTITUTIONAL
+          </text>
+        </svg>
+      </div>
+
+      <div class="hidden xl:flex items-center gap-1 bg-[#0d0d0f] p-1 rounded border border-zinc-800">
+        ${g.openTabs.map(sym => {
+          const item = g.a[sym];
+          if (!item) return null;
+          const chg = item.p / item.d0 - 1;
+          const active = sym === sel;
+          return h`<button key=${sym} onClick=${() => setSel(sym)} class="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] transition ${active ? 'bg-zinc-800 text-white font-bold border border-zinc-400' : 'text-zinc-400 hover:text-zinc-200'}">
+            <${AssetLogo} sym=${sym} size=${14}/>
+            <span>${sym}</span>
+            <span class="text-[9.5px] ${cl(chg)}">${pc(chg)}</span>
+          </button>`;
+        })}
+      </div>
+
+      <div class="px-2 py-1 rounded bg-[#0d0d0f] border border-zinc-800 font-semibold text-zinc-200 text-[11px]">${tm(g.d, g.tk, lang)}</div>
+      <div class="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 font-semibold text-[11px]">
+        <${I} d=${IC.bell} s=${13}/>
+        <span>${Math.floor(timer / 60)}:${String(timer % 60).padStart(2, '0')}</span>
+        <button onClick=${() => triggerManualNews(false)} class="px-1.5 py-0.2 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[9px] uppercase border border-zinc-700">${t.news}</button>
+      </div>
+
+      <div class="flex items-center gap-1">
+        ${B(sp === 0, () => setSp(0), IC.pause, '')}
+        ${B(sp === 1, () => setSp(1), IC.play, '1x')}
+        ${B(sp === 3, () => setSp(3), IC.fast, '3x')}
+        ${B(sp === 10, () => setSp(10), IC.zap, '10x')}
+        ${B(false, skip, IC.skip, '+1D')}
+        ${B(false, () => setCapModalOpen(true), IC.edit, `${t.capital}: ${fmtBillion(cap)}`)}
+        ${B(false, exportSave, IC.save, t.save)}
+        ${B(false, rst, IC.reset, '')}
+      </div>
+
+      <button onClick=${() => setLang(l => l === 'es' ? 'en' : 'es')} title="Switch Language / Cambiar Idioma" class="flex items-center gap-1 px-2.5 py-1 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-[11px] font-black text-white transition">
+        <span class=${lang === 'es' ? 'text-white' : 'text-zinc-500'}>ES</span>
+        <span class="text-zinc-600">/</span>
+        <span class=${lang === 'en' ? 'text-white' : 'text-zinc-500'}>EN</span>
+      </button>
+
+      <div class="ml-auto flex flex-wrap items-center gap-3 bg-[#0d0d0f] px-3 py-1 rounded border border-zinc-800">
+        <div><span class="text-[9px] text-zinc-500 block">${t.equity}</span><b class="text-white">${fmtBillion(E)}</b></div>
+        <div onClick=${() => setCapModalOpen(true)} class="border-l border-zinc-800 pl-3 cursor-pointer hover:opacity-80 transition">
+          <span class="text-[9px] text-zinc-500 block">${t.available} ✎</span>
+          <b class="text-emerald-300">${fmtBillion(g.cash)}</b>
+        </div>
+        <div class="border-l border-zinc-800 pl-3"><span class="text-[9px] text-zinc-500 block">${t.forbesRank}</span><b class="text-zinc-100">#${userRank}</b></div>
+        <div class="border-l border-zinc-800 pl-3"><span class="text-[9px] text-zinc-500 block">${t.returnPct}</span><b class=${cl(E - g.k0)}>${pc(E / g.k0 - 1)}</b></div>
+      </div>
+    </header>
+
+    ${g.rumor && h`
+      <div class="mx-2 mt-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-600 flex items-center justify-between text-xs text-zinc-200">
+        <span>🕵️ <b>${t.radarIntercepted}</b> ${t.radarMoveIn} <b class="text-white">${g.rumor.syms}</b> — "${lang === 'en' ? (g.rumor.headline_en || g.rumor.headline) : g.rumor.headline}"</span>
+        <span class="text-[10px] font-bold uppercase text-zinc-300">${t.confirmIn} ${timer}s</span>
+      </div>
+    `}
+
+    ${breaking && h`
+      <div onClick=${() => setActiveArticle(breaking)} class="mx-2 mt-2 p-3 rounded bg-[#0d0d0f] border-2 breaking-flash flex flex-col gap-2 shadow-2xl cursor-pointer hover:bg-zinc-900/95 transition relative overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-start gap-3 flex-1 min-w-0">
+            <div class="flex flex-col items-start gap-1 shrink-0">
+              <span class="px-2 py-0.5 rounded ${breaking.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : 'bg-zinc-100 text-zinc-950'} font-black text-[10px] tracking-wider uppercase">${lang === 'en' ? (breaking.cat_en || breaking.cat) : (breaking.cat || breaking.tag)}</span>
+              <div class="flex items-center gap-1 text-[10px] text-zinc-300 font-bold">
+                <${MediaLogo} outlet=${breaking.outlet} size=${13}/>
+                <span>${breaking.outlet?.name || 'Bloomberg'}</span>
+              </div>
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-white text-sm leading-snug flex flex-wrap items-center gap-2">
+                <span>${lang === 'en' ? (breaking.h_en || breaking.h) : breaking.h}</span>
+                <span class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-600 text-[10px] text-zinc-200 font-bold">📖 ${t.readFullTimer} (${breakingRem}s)</span>
+              </div>
+              <div class="text-zinc-300 text-xs mt-1 leading-relaxed">${lang === 'en' ? (breaking.b_en || breaking.b) : breaking.b}</div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 shrink-0" onClick=${e => e.stopPropagation()}>
+            ${Object.entries(breaking.sg).slice(0, 4).map(([s, v]) => g.a[s] && h`
+              <button key=${s} onClick=${() => selectAsset(s)} class="flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold border transition hover:scale-105 ${v > 0 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/20 border-rose-500/40 text-rose-300'}">
+                <${AssetLogo} sym=${s} size=${15}/>
+                <span>${s} ${v > 0 ? '▲' : '▼'}</span>
+              </button>
+            `)}
+            <button onClick=${() => { setBreaking(null); setBreakingRem(0); }} class="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold">✕</button>
+          </div>
+        </div>
+        <div class="w-full h-1 bg-zinc-800 rounded overflow-hidden">
+          <div class="h-full bg-zinc-300 transition-all duration-1000" style=${{ width: `${(breakingRem / 45) * 100}%` }}></div>
+        </div>
+      </div>
+    `}
+
+    <div class="overflow-hidden border-b border-zinc-800/90 bg-[#050506] py-1.5 text-[11px]">
+      <div class="tk flex w-max items-center">
+        ${[0, 1].map(k => g.A.map(x => {
+          const c = x.p / x.d0 - 1;
+          return h`<span key=${k + x.sym} onClick=${() => selectAsset(x.sym)} class="inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap pr-7 hover:text-white transition">
+            <${AssetLogo} sym=${x.sym} size=${15}/>
+            <b class="text-zinc-100">${x.sym}</b>
+            <span class="text-zinc-300">${usd(x.p)}</span>
+            <span class="text-[10px] text-zinc-500">[${fmtCap(x.p * x.sh)}]</span>
+            <span class=${cl(c)}>${c >= 0 ? '▲' : '▼'}${pc(c)}</span>
+          </span>`;
+        }))}
+      </div>
+    </div>
+
+    <div class="flex flex-1 min-w-0">
+      <nav class="hidden sm:flex flex-col items-center gap-2 py-3 px-1.5 border-r border-zinc-800/90 bg-[#060607] w-[62px] shrink-0">
+        <${SidebarButton} active=${tab === 'p'} onClick=${() => setTab('p')} icon=${IC.save} label=${t.navPortfolio} title=${t.navPortfolio} badge=${pos.length + (g.OP || []).length}/>
+        <${SidebarButton} active=${tab === 'o'} onClick=${() => setTab('o')} icon=${IC.orders} label=${t.navOrders} title=${t.navOrders} badge=${g.O.length}/>
+        <${SidebarButton} active=${tab === 'b'} onClick=${() => setTab('b')} icon=${IC.trophy} label=${t.navTop100} title=${t.navTop100}/>
+        <${SidebarButton} active=${tab === 'tycoon'} onClick=${() => setTab('tycoon')} icon=${IC.cpu} label=${t.navTycoon} title=${t.navTycoon}/>
+        <${SidebarButton} active=${tab === 'h'} onClick=${() => setTab('h')} icon=${IC.grid} label=${t.navMap} title=${t.navMap}/>
+        <${SidebarButton} active=${tab === 'bank'} onClick=${() => setTab('bank')} icon=${IC.bank} label=${t.navBank} title=${t.navBank}/>
+        <${SidebarButton} active=${tab === 'c'} onClick=${() => setTab('c')} icon=${IC.trend} label=${t.navBenchmark} title=${t.navBenchmark}/>
+        <${SidebarButton} active=${tab === 't'} onClick=${() => setTab('t')} icon=${IC.history} label=${t.navHistory} title=${t.navHistory}/>
+        <div class="w-8 border-t border-zinc-800 my-0.5"></div>
+        <${SidebarButton} active=${capModalOpen} onClick=${() => setCapModalOpen(true)} icon=${IC.edit} label=${t.navCapital} title=${t.navCapital}/>
+        <${SidebarButton} active=${nm} onClick=${() => setNm(true)} icon=${IC.news} label=${t.navPress} title=${t.navPress} badge=${g.N.length}/>
+      </nav>
+
+      <main class="grid gap-2.5 p-2.5 lg:grid-cols-[315px_minmax(0,1fr)_335px] flex-1 min-w-0 items-start">
+        <div class="space-y-2.5 min-w-0 flex flex-col lg:row-span-2">
+          <section class="${PN} flex flex-col">
+            <div class="space-y-2 border-b border-zinc-800 p-2.5">
+              <div class="flex justify-between items-center">
+                <b class="text-zinc-100 text-xs uppercase tracking-wider">${t.markets} (${al.length})</b>
+                <select value=${sortBy} onChange=${e => setSortBy(e.target.value)} class="w-auto py-0.5 px-1.5 text-[10px] bg-zinc-900">
+                  <option value="cap">${t.sortCap}</option>
+                  <option value="chg">${t.sortChg}</option>
+                  <option value="price">${t.sortPrice}</option>
+                </select>
+              </div>
+              <input ref=${searchInputRef} placeholder=${t.searchAssetPlaceholder} value=${srch} onInput=${e => setSrch(e.target.value)}/>
+              <div class="flex flex-wrap gap-1">
+                <button onClick=${() => setSf('favs')} class="rounded px-2 py-0.5 text-[10px] font-bold transition ${sf === 'favs' ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-white'}">${t.fav}</button>
+                ${['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setSf(k)} class="rounded px-2 py-0.5 text-[10px] font-medium transition ${sf === k ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'}">${k === 'all' ? t.all : t.sectors[k]}</button>`)}
+              </div>
+            </div>
+
+            <div class="max-h-[34vh] overflow-y-auto divide-y divide-zinc-800/70">
+              ${al.map(x => {
+                const c = x.p / x.d0 - 1;
+                const pq = g.P[x.sym]?.q || 0;
+                const isFav = g.favs.includes(x.sym);
+                return h`
+                <div key=${x.sym} onClick=${() => selectAsset(x.sym)} class="w-full flex justify-between items-center px-2.5 py-2 cursor-pointer transition ${x.sym === sel ? 'bg-zinc-900 border-l-2 border-white' : 'hover:bg-zinc-900/60'}">
+                  <div class="min-w-0 pr-2 flex items-center gap-2">
+                    <button onClick=${e => toggleFav(e, x.sym)} class="text-xs ${isFav ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}">★</button>
+                    <${AssetLogo} sym=${x.sym} size=${22}/>
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-1.5">
+                        <b class="text-zinc-100 text-xs">${x.sym}</b>
+                        ${pq > 0 && h`<span class="px-1 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">LONG</span>`}
+                        ${pq < 0 && h`<span class="px-1 rounded bg-rose-500/20 text-rose-300 text-[9px] font-bold">SHORT</span>`}
+                      </div>
+                      <div class="text-[10px] text-zinc-400 truncate">${x.name}</div>
+                      <div class="text-[10px] text-zinc-300 font-semibold">Cap: ${fmtCap(x.p * x.sh)}</div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="font-bold text-zinc-100">${usd(x.p)}</div>
+                    <div class="text-[11px] font-semibold ${cl(c)}">${pc(c)}</div>
+                  </div>
+                </div>`;
+              })}
+            </div>
+          </section>
+
+          <section class="${PN} flex-1 flex flex-col min-h-[340px]">
+            <div class="flex flex-wrap items-center gap-1.5 border-b border-zinc-800 p-2.5 bg-[#060607] rounded-t-md">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <b class="text-zinc-100 text-xs uppercase tracking-wider flex items-center gap-1"><${I} d=${IC.news} s=${13}/> ${t.agencyTitle} (${g.N.length})</b>
+              </div>
+              <button onClick=${() => setNm(true)} class="ml-auto rounded bg-zinc-200 text-zinc-950 px-2 py-0.5 text-[10px] font-black hover:bg-white transition">${t.fullPortal}</button>
+            </div>
+
+            <div class="p-2 border-b border-zinc-800 bg-[#09090b] space-y-1.5">
+              <input placeholder=${t.searchNewsPlaceholder} value=${newsQuery} onInput=${e => setNewsQuery(e.target.value)} class="py-1 text-[11px]"/>
+              <div class="flex flex-wrap gap-1">${fc}</div>
+            </div>
+
+            <div class="overflow-y-auto flex-1 max-h-[52vh]">
+              ${nl.length > 0 ? nl.slice(0, 18).map((w, idx) => h`
+                <${NewsCard} key=${w.id} w=${w} g=${g} full=${false} featured=${idx === 0} lang=${lang} t=${t} onSelectAsset=${s => selectAsset(s)} onOpenArticle=${art => setActiveArticle(art)}/>
+              `) : h`<p class="p-6 text-center text-zinc-500 text-xs">${t.noNewsFor} "${newsQuery}".</p>`}
+            </div>
+          </section>
+        </div>
+
+        <section class="${PN} min-w-0">
+          <div class="flex flex-wrap items-center gap-3 p-3 border-b border-zinc-800">
+            <div class="flex items-center gap-3">
+              <${AssetLogo} sym=${a.sym} size=${34}/>
+              <div>
+                <div class="flex items-center gap-2">
+                  <b class="text-base text-white tracking-tight">${a.sym}</b>
+                  <span class="text-zinc-400 text-xs">${a.name}</span>
+                  <span class="rounded bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-300">${t.sectors[a.sec]}</span>
+                </div>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="text-xl font-black ${cl(c0)}">${usd(a.p)}</span>
+                  <span class="px-1.5 py-0.5 rounded text-xs font-bold ${c0 >= 0 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}">${pc(c0)}</span>
+                  <span class="text-xs text-zinc-400 border-l border-zinc-800 pl-3">Cap: <b class="text-white text-sm">${fmtCap(a.p * a.sh)}</b></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ml-auto flex flex-wrap gap-1">
+              ${B(mode === 'c', () => setMode('c'), null, t.candles)}
+              ${B(mode === 'l', () => setMode('l'), null, t.area)}
+              ${B(sma, () => setSma(!sma), null, 'SMA')}
+              ${B(ema, () => setEma(!ema), null, 'EMA')}
+              ${B(bb, () => setBb(!bb), null, 'BB')}
+              ${B(rsiOn, () => setRsiOn(!rsiOn), null, 'RSI')}
+              ${B(macdOn, () => setMacdOn(!macdOn), null, 'MACD')}
+              ${B(drawMode, () => setDrawMode(!drawMode), null, drawMode ? t.clickChart : t.addLevel)}
+              ${customLevelsForSel.length > 0 && B(false, () => { g.levels[sel] = []; fr(); }, null, t.clearLevels)}
+            </div>
+          </div>
+
+          <${Chart} a=${a} P=${P} t=${t} blitzList=${activeBlitzForSel} customLevels=${customLevelsForSel} onAddLevel=${px => { g.levels[sel] = [...(g.levels[sel] || []), px]; setDrawMode(false); setMsg((lang === 'en' ? 'Support/Resistance set at ' : 'Soporte/Resistencia fijado en ') + usd(px)); saveGame(g); fr(); }} drawMode=${drawMode} mode=${mode} sma=${sma} ema=${ema} bb=${bb} rsiOn=${rsiOn} macdOn=${macdOn} vol=${vol}/>
+        </section>
+
+        <aside class="space-y-2.5 min-w-0">
+          <section class="${PN} p-3 space-y-2.5">
+            <div class="grid grid-cols-3 gap-1 p-1 rounded bg-[#060607] border border-zinc-800">
+              <button onClick=${() => setTradeMode('actions')} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'actions' ? 'bg-zinc-200/15 text-white border border-zinc-400' : 'text-zinc-400 hover:text-white'}">${t.tabActions}</button>
+              <button onClick=${() => { setTradeMode('options'); if (!optStrike) setOptStrike(String(Math.round(a.p))); }} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'options' ? 'bg-zinc-200/15 text-white border border-zinc-400' : 'text-zinc-400 hover:text-white'}">${t.tabOptions}</button>
+              <button onClick=${() => setTradeMode('blitz')} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'blitz' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50' : 'text-zinc-400 hover:text-white'}">${t.tabBlitz}</button>
+            </div>
+
+            ${tradeMode === 'options' ? h`
+              <div class="space-y-2.5 pt-1">
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button onClick=${() => setOptType('CALL')} class="py-2 rounded font-black text-xs border transition ${optType === 'CALL' ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${t.callBull}</button>
+                  <button onClick=${() => setOptType('PUT')} class="py-2 rounded font-black text-xs border transition ${optType === 'PUT' ? 'bg-rose-600/25 border-rose-500 text-rose-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${t.putBear}</button>
+                </div>
+
+                <label class="block text-[11px] text-zinc-400">
+                  ${t.strikePrice} (${t.current}: ${usd(a.p)})
+                  <input type="number" step="any" value=${optStrike} onInput=${e => setOptStrike(e.target.value)} class="mt-1 font-bold"/>
+                </label>
+
+                <div>
+                  <div class="text-[10px] text-zinc-400 mb-1">${t.expiration}</div>
+                  <div class="grid grid-cols-4 gap-1">
+                    ${[1, 3, 5, 10].map(d => h`<button key=${d} onClick=${() => setOptDays(d)} class="py-1 rounded text-[11px] font-bold border ${optDays === d ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${d}d</button>`)}
+                  </div>
+                </div>
+
+                <label class="block text-[11px] text-zinc-400">
+                  ${t.contractsLabel}
+                  <input type="number" min="1" value=${optContracts} onInput=${e => setOptContracts(e.target.value)} class="mt-1 font-bold"/>
+                </label>
+
+                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800 space-y-1 text-[11px]">
+                  <div class="flex justify-between"><span class="text-zinc-400">${t.premiumPerShare}</span><b>${usd(calcOptionPrice(a, optType, +optStrike || a.p, optDays))}</b></div>
+                  <div class="flex justify-between"><span class="text-zinc-400">${t.totalPremiumCost}</span><b class="text-white">${usd(calcOptionPrice(a, optType, +optStrike || a.p, optDays) * 100 * (+optContracts || 0))}</b></div>
+                </div>
+
+                <button onClick=${goOption} class="w-full py-3 rounded bg-zinc-200 hover:bg-white text-zinc-950 font-black text-xs tracking-wider shadow-lg transition">
+                  ${t.buyContract} ${optType}
+                </button>
+              </div>
+            ` : tradeMode === 'blitz' ? h`
+              <div class="space-y-3 pt-1">
+                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800">
+                  <div class="text-[10px] text-zinc-400 uppercase mb-1">${t.expiryTime}</div>
+                  <div class="grid grid-cols-4 gap-1">
+                    ${[15, 30, 60, 120].map(s => h`<button key=${s} onClick=${() => setBlitzSec(s)} class="py-1.5 rounded text-xs font-bold border transition ${blitzSec === s ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${s < 60 ? s + 's' : (s / 60) + 'm'}</button>`)}
+                  </div>
+                </div>
+
+                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800">
+                  <div class="text-[10px] text-zinc-400 uppercase mb-1">${t.blitzInvestment}</div>
+                  <input type="number" min="1" value=${blitzStake} onInput=${e => setBlitzStake(e.target.value)} class="font-bold text-base text-center"/>
+                  <div class="grid grid-cols-4 gap-1 mt-1.5">
+                    ${[500, 2500, 10000, 50000].map(v => h`<button key=${v} onClick=${() => setBlitzStake(String(v))} class="py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] hover:bg-zinc-800">$${v >= 1000 ? (v / 1000) + 'K' : v}</button>`)}
+                  </div>
+                </div>
+
+                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 text-center">
+                  <div class="text-[10px] text-zinc-400 uppercase">${t.expectedReturn}</div>
+                  <div class="text-2xl font-black text-emerald-400 mt-0.5">+92%</div>
+                  <div class="text-xs font-bold text-emerald-300">+${usd((+blitzStake || 0) * 1.92)} ${t.totalReturn}</div>
+                </div>
+
+                <div class="space-y-2 pt-1">
+                  <button onClick=${() => goBlitz('up')} class="w-full py-3.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                    <span>${t.upBtn}</span><span class="text-lg">↗</span>
+                  </button>
+                  <button onClick=${() => goBlitz('down')} class="w-full py-3.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-sm tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                    <span>${t.downBtn}</span><span class="text-lg">↘</span>
+                  </button>
+                </div>
+
+                ${(g.B || []).length > 0 && h`
+                  <div class="p-2 rounded bg-[#060607] border border-zinc-800 space-y-1">
+                    <div class="text-[10px] font-bold text-zinc-200 uppercase">${t.activeBlitz} (${g.B.length})</div>
+                    ${g.B.slice(0, 4).map(b => {
+                      const winning = (b.dir === 'up' && g.a[b.sym].p > b.entryPx) || (b.dir === 'down' && g.a[b.sym].p < b.entryPx);
+                      return h`<div key=${b.id} class="flex justify-between items-center text-[10.5px] px-1.5 py-1 rounded bg-zinc-900">
+                        <span><b>${b.sym}</b> ${b.dir === 'up' ? '↗' : '↘'} $${b.stake}</span>
+                        <span class="font-bold ${winning ? 'text-emerald-400' : 'text-rose-400'}">${winning ? t.winning : t.losing} · ${b.remSec}s</span>
+                      </div>`;
+                    })}
+                  </div>
+                `}
+              </div>
+            ` : h`
+              <div class="space-y-2.5">
+                <div class="p-2 rounded bg-[#060607] border border-zinc-800 flex justify-between items-center text-[11px]">
+                  <div>
+                    <span class="text-zinc-500 block text-[10px]">${t.position} (${P.q > 0 ? 'LONG' : P.q < 0 ? 'SHORT' : t.neutral})</span>
+                    <b class="text-zinc-100">${Math.abs(P.q)} u.</b> <span class="text-zinc-400">@ ${usd(P.avg)}</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-zinc-500 block text-[10px]">${t.unrealizedPnl}</span>
+                    <b class=${cl(curPosPnl)}>${usd(curPosPnl)}</b>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                  ${B(orderType === 'market', () => setOrderType('market'), null, t.marketOrder, 'justify-center')}
+                  ${B(orderType === 'limit', () => { setOrderType('limit'); if (!limitPx) setLimitPx(a.p.toFixed(2)); }, null, t.limitOrder, 'justify-center')}
+                </div>
+
+                ${orderType === 'limit' && h`
+                  <label class="block text-[11px] text-zinc-200">
+                    ${t.targetPrice}
+                    <input type="number" step="any" value=${limitPx} onInput=${e => setLimitPx(e.target.value)} class="mt-1 font-bold"/>
+                  </label>
+                `}
+
+                <div>
+                  <div class="flex justify-between text-[10px] text-zinc-400 mb-1">
+                    <span>${t.leverage}</span>
+                    <span class="text-white font-bold">${lev}x (${t.maxWord} ${maxLevAllowed}x)</span>
+                  </div>
+                  <div class="grid grid-cols-4 gap-1">
+                    ${[1, 2, 5, maxLevAllowed].map(x => h`<button key=${x} onClick=${() => setLev(x)} class="py-1 rounded text-[10px] font-bold border transition ${lev === x ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${x}x</button>`)}
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                  ${B(!byUsd, () => { setByUsd(false); setQ(''); }, null, t.units, 'justify-center')}
+                  ${B(byUsd, () => { setByUsd(true); setQ(''); }, null, t.usdAmount, 'justify-center')}
+                </div>
+
+                <label class="block text-[11px] text-zinc-400">
+                  ${byUsd ? t.marginToInvest : t.shareQty}
+                  <input type="number" min="0" step="any" value=${q} onInput=${e => setQ(e.target.value)} class="mt-1 font-bold text-sm"/>
+                </label>
+
+                <div class="grid grid-cols-5 gap-1">
+                  ${[0.1, 0.25, 0.5, 1].map(v => h`<button key=${v} onClick=${() => setQ(String(byUsd ? Math.floor(g.cash * v * 100) / 100 : uf(a, 'buy', g.cash * v, lev, g)))} class="rounded bg-zinc-900 border border-zinc-800 py-1 text-[10px] font-semibold hover:bg-zinc-800">${v === 1 ? t.maxWord : (v * 100) + '%'}</button>`)}
+                  <button onClick=${() => setQ(String(byUsd ? (Math.abs(P.q) * a.p / (P.lev || 1)).toFixed(2) : Math.abs(P.q)))} class="rounded bg-zinc-800 border border-zinc-600 text-zinc-200 py-1 text-[10px] font-semibold">${t.closeBtn}</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-800">
+                  <label class="block text-[10.5px] text-rose-300">Stop Loss<input type="number" placeholder=${(a.p * 0.95).toFixed(2)} value=${sl} onInput=${e => setSl(e.target.value)} class="mt-1"/></label>
+                  <label class="block text-[10.5px] text-emerald-300">Take Profit<input type="number" placeholder=${(a.p * 1.08).toFixed(2)} value=${tp} onInput=${e => setTp(e.target.value)} class="mt-1"/></label>
+                </div>
+
+                ${riskReward && h`
+                  <div class="flex justify-between items-center px-2 py-1 rounded bg-zinc-900 text-[10px]">
+                    <span class="text-zinc-400">${t.rrRatio}</span>
+                    <b class="${+riskReward >= 2 ? 'text-emerald-400' : 'text-zinc-200'}">1 : ${riskReward}</b>
+                  </div>
+                `}
+
+                <button onClick=${setLv} class="w-full rounded border border-zinc-800 bg-zinc-900 py-1 text-[10.5px] font-medium hover:bg-zinc-800">${t.applySlTp}</button>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <button onClick=${() => go('buy')} class="py-2.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition">${P.q < 0 ? t.closeShort : t.buyLong}</button>
+                  <button onClick=${() => go('sell')} class="py-2.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition">${P.q > 0 ? t.sellLong : t.shortSell}</button>
+                </div>
+              </div>
+            `}
+
+            ${msg && h`<div class="p-2 rounded bg-zinc-800/90 border border-zinc-600 text-zinc-100 text-[11px] font-medium">${msg}</div>`}
+          </section>
+        </aside>
+
+        <div class="lg:col-span-2 grid gap-2.5 md:grid-cols-[235px_minmax(0,1fr)] min-w-0">
+          <section class="${PN} p-2.5">
+            <div class="font-bold text-zinc-100 text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><${AssetLogo} sym=${a.sym} size=${16}/><span>${t.orderBook} · ${a.sym}</span></div>
+            <${Book} a=${a} t=${t} onPickPrice=${px => { setTradeMode('actions'); setOrderType('limit'); setLimitPx(px); setMsg((lang === 'en' ? 'Limit price set to ' : 'Precio fijado en Orden Límite: ') + px); }}/>
+          </section>
+
+          <section class="${PN} min-w-0 flex flex-col">
+            <div class="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-[#060607] rounded-t-md">
+              ${B(tab === 'p', () => setTab('p'), null, `${t.tabPortfolio} (${pos.length + (g.OP || []).length})`)}
+              ${B(tab === 'b', () => setTab('b'), null, `${t.tabForbes} (#${userRank})`)}
+              ${B(tab === 'tycoon', () => setTab('tycoon'), null, t.tabTycoon)}
+              ${B(tab === 'h', () => setTab('h'), null, t.tabHeatmap)}
+              ${B(tab === 'o', () => setTab('o'), null, `${t.tabOrders} (${g.O.length})`)}
+              ${B(tab === 'bank', () => setTab('bank'), null, t.tabBank)}
+              ${B(tab === 'c', () => setTab('c'), null, t.tabSpy)}
+              ${B(tab === 't', () => setTab('t'), null, t.tabHistory)}
+            </div>
+
+            <div class="overflow-x-auto max-h-[340px] overflow-y-auto flex-1">
+              ${tab === 'p' && h`
+                <div>
+                  <div class="grid grid-cols-3 gap-2 p-2.5 bg-[#08080a] border-b border-zinc-800 text-[11px]">
+                    <div><span class="text-zinc-500 block text-[10px]">${t.stockMargin}</span><b class="text-zinc-100">${usd(totalMargin)}</b></div>
+                    <div><span class="text-zinc-500 block text-[10px]">${t.realizedPnl}</span><b class=${cl(totalRealized)}>${usd(totalRealized)}</b></div>
+                    <div><span class="text-zinc-500 block text-[10px]">${t.callPutContracts}</span><b class="text-zinc-200">${(g.OP || []).length} ${t.activeCount}</b></div>
+                  </div>
+
+                  ${pos.length > 0 && h`
+                    <table class="w-full">
+                      <thead>${th(t.thAsset, t.thType, t.thQty, t.thEntry, t.thCurrent, t.thPnl, 'ROI')}</thead>
+                      <tbody class="divide-y divide-zinc-800/70">
+                        ${pos.map(([s, p]) => {
+                          const x = g.a[s];
+                          const isLong = p.q > 0;
+                          const absQ = Math.abs(p.q);
+                          const u = isLong ? (x.p - p.avg) * absQ : (p.avg - x.p) * absQ;
+                          const roi = p.margin > 0 ? u / p.margin : 0;
+                          return h`<tr key=${s} class="cursor-pointer hover:bg-zinc-900" onClick=${() => selectAsset(s)}>
+                            <td class="font-bold text-zinc-100"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${s} size=${16}/><span>${s}</span></div></td>
+                            <td><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isLong ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${isLong ? 'LONG' : 'SHORT'} ${p.lev > 1 ? p.lev + 'x' : ''}</span></td>
+                            <td>${absQ}</td>
+                            <td>${p.avg.toFixed(2)}</td>
+                            <td>${x.p.toFixed(2)}</td>
+                            <td class="font-semibold ${cl(u)}">${usd(u)}</td>
+                            <td class="font-semibold ${cl(roi)}">${pc(roi)}</td>
+                          </tr>`;
+                        })}
+                      </tbody>
+                    </table>
+                  `}
+
+                  ${(g.OP || []).length > 0 && h`
+                    <div class="p-2 border-t border-zinc-800">
+                      <div class="text-[10px] font-bold uppercase text-zinc-300 mb-1">${t.callPutContracts}</div>
+                      <table class="w-full">
+                        <thead>${th(t.thAsset, t.thContract, 'Strike', t.thExpires, t.thCurrVal, t.thPnl, t.thAction)}</thead>
+                        <tbody class="divide-y divide-zinc-800/70">
+                          ${g.OP.map(o => {
+                            const curVal = calcOptionPrice(g.a[o.sym], o.type, o.strike, o.daysLeft) * 100 * o.contracts;
+                            const pnl = curVal - o.cost;
+                            return h`<tr key=${o.id}>
+                              <td class="font-bold text-white"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${o.sym} size=${16}/><span>${o.sym}</span></div></td>
+                              <td class="font-bold ${o.type === 'CALL' ? 'text-emerald-400' : 'text-rose-400'}">${o.contracts}x ${o.type}</td>
+                              <td>${usd(o.strike)}</td>
+                              <td>${o.daysLeft}d</td>
+                              <td>${usd(curVal)}</td>
+                              <td class="font-bold ${cl(pnl)}">${usd(pnl)}</td>
+                              <td><button onClick=${() => { closeOptionContract(g, o.id, false); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-600 text-white text-[10px] font-bold">${t.exercise}</button></td>
+                            </tr>`;
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  `}
+
+                  ${!pos.length && !(g.OP || []).length && h`<p class="p-8 text-center text-zinc-500">${t.noOpenPositions}</p>`}
+                </div>
+              `}
+
+              ${tab === 'b' && h`
+                <div class="p-2.5 space-y-2.5">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div class="text-[11px] font-bold uppercase text-white">${t.forbesTitle}</div>
+                      <div class="text-[10px] text-zinc-400">${t.forbesSub}</div>
+                    </div>
+                    <input placeholder=${t.searchBillPlaceholder} value=${billSearch} onInput=${e => setBillSearch(e.target.value)} class="w-48 py-1 text-[11px]"/>
+                  </div>
+
+                  <table class="w-full border border-zinc-800 rounded">
+                    <thead>${th('#', t.thBillionaire, t.thCountry, t.thEmpire, t.thWealth, t.thSessionChg)}</thead>
+                    <tbody class="divide-y divide-zinc-800/70">
+                      ${filteredBillionaires.map(b => h`
+                        <tr key=${b.id} onClick=${() => selectAsset(b.mainSym)} class="cursor-pointer transition ${b.isUser ? 'bg-zinc-200/15 font-bold' : 'hover:bg-zinc-900'}">
+                          <td class="font-bold ${b.rank <= 3 ? 'text-white' : 'text-zinc-400'}">#${b.rank}</td>
+                          <td class="${b.isUser ? 'text-white' : 'text-zinc-200'} font-semibold">${b.name}</td>
+                          <td class="text-[10px] text-zinc-400">${b.country}</td>
+                          <td class="text-[10px] text-zinc-300">
+                            ${b.isUser ? t.yourPortfolio : h`<div class="flex items-center justify-end gap-1">
+                              ${(b.holdings || []).map(hItem => h`<span key=${hItem.sym} class="inline-flex items-center gap-1 px-1 py-0.2 rounded bg-zinc-900 border border-zinc-800"><${AssetLogo} sym=${hItem.sym} size=${12}/><span>${hItem.sym}</span></span>`)}
+                            </div>`}
+                          </td>
+                          <td class="font-bold text-white">${fmtBillion(b.val)}</td>
+                          <td class="font-semibold ${cl(b.chg)}">${b.chg >= 0 ? '+' : ''}${fmtBillion(b.chg)} (${pc(b.ret)})</td>
+                        </tr>
+                      `)}
+                    </tbody>
+                  </table>
+                </div>
+              `}
+
+              ${tab === 'tycoon' && h`
+                <div class="p-3 space-y-3">
+                  <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                      <div class="text-[10px] font-bold uppercase text-emerald-400">${t.aumTitle}</div>
+                      <div class="text-base font-black text-white">${fmtBillion(g.aum || 0)}</div>
+                      <div class="text-[10px] text-zinc-400">${t.aumSub}</div>
+                    </div>
+                    <div class="text-right text-[10px]">
+                      <div class="text-zinc-400">${t.currentFee} <b class="text-white">${(getFeeRate(g) * 100).toFixed(3)}%</b></div>
+                      <div class="text-zinc-400">${t.maxLevLabel} <b class="text-white">${maxLevAllowed}x</b></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] font-bold uppercase text-zinc-200 mb-1.5">${t.upgradesTitle}</div>
+                    <div class="grid gap-2 sm:grid-cols-3">
+                      ${UPGRADES_DEF.map(u => {
+                        const owned = !!g.upgrades[u.id];
+                        return h`<div key=${u.id} class="p-2.5 rounded border flex flex-col justify-between ${owned ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-[#08080a] border-zinc-800'}">
+                          <div>
+                            <b class="text-xs block ${owned ? 'text-emerald-300' : 'text-zinc-100'}">${lang === 'en' ? u.name_en : u.name}</b>
+                            <p class="text-[10px] text-zinc-400 mt-1">${lang === 'en' ? u.desc_en : u.desc}</p>
+                          </div>
+                          <div class="mt-2 pt-2 border-t border-zinc-800/80">
+                            ${owned ? h`<span class="text-[10px] font-bold text-emerald-400">${t.installed}</span>` : h`<button onClick=${() => {
+                              if (g.cash < u.cost) { setMsg((lang === 'en' ? 'Need ' : 'Necesitas ') + usd(u.cost)); return; }
+                              g.cash -= u.cost; g.upgrades[u.id] = true; saveGame(g); setMsg((lang === 'en' ? 'Upgrade unlocked: ' : 'Mejora adquirida: ') + (lang === 'en' ? u.name_en : u.name)); fr();
+                            }} class="w-full py-1 rounded bg-zinc-200 hover:bg-white text-zinc-950 font-black text-[10px]">${t.acquire} (${fmtBillion(u.cost)})</button>`}
+                          </div>
+                        </div>`;
+                      })}
+                    </div>
+                  </div>
+
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800">
+                      <div class="text-[10px] font-bold uppercase text-zinc-200 mb-1.5">${t.earningsCalTitle}</div>
+                      <div class="space-y-1">
+                        ${(g.earningsCal || []).map(e => h`<div key=${e.sym} onClick=${() => selectAsset(e.sym)} class="flex justify-between items-center text-[11px] px-2 py-1 rounded bg-zinc-900 cursor-pointer hover:bg-zinc-800">
+                          <span class="flex items-center gap-1.5"><${AssetLogo} sym=${e.sym} size=${14}/><b>${e.sym}</b> <span class="text-zinc-400">(${e.name})</span></span>
+                          <span class="text-zinc-200 font-bold">${t.inDaysPrefix}${e.inDays}d</span>
+                        </div>`)}
+                      </div>
+                    </div>
+
+                    <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                      <div class="text-[10px] font-bold uppercase text-zinc-200">${t.priceAlertsTitle} (${sel})</div>
+                      <div class="flex gap-1.5">
+                        <input type="number" placeholder=${a.p.toFixed(2)} value=${alertPx} onInput=${e => setAlertPx(e.target.value)} class="py-1 text-xs"/>
+                        <button onClick=${() => {
+                          const v = +alertPx; if (!(v > 0)) return;
+                          g.alerts.unshift({ id: g.alid++, sym: sel, val: v, cond: v >= a.p ? 'above' : 'below' });
+                          setAlertPx(''); saveGame(g); fr();
+                        }} class="px-3 rounded bg-zinc-200 text-zinc-950 font-bold text-xs shrink-0">${t.addAlert}</button>
+                      </div>
+                      <div class="space-y-1 max-h-24 overflow-y-auto">
+                        ${g.alerts.map(al => h`<div key=${al.id} class="flex justify-between items-center text-[10.5px] px-2 py-0.5 rounded bg-zinc-900">
+                          <span><b>${al.sym}</b> ${al.cond === 'above' ? '≥' : '≤'} ${usd(al.val)}</span>
+                          <button onClick=${() => { g.alerts = g.alerts.filter(x => x.id !== al.id); fr(); }} class="text-rose-400 font-bold">✕</button>
+                        </div>`)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] font-bold uppercase text-zinc-400 mb-1.5">${t.missionsTitle} (${unlockedCount}/${MISSIONS_DEF.length})</div>
+                    <div class="grid gap-1.5 sm:grid-cols-3">
+                      ${MISSIONS_DEF.map(m => {
+                        const ok = !!g.unlocked[m.id];
+                        return h`<div key=${m.id} class="p-2 rounded border text-[10.5px] ${ok ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-[#08080a] border-zinc-800 opacity-75'}">
+                          <div class="flex justify-between font-bold ${ok ? 'text-emerald-300' : 'text-zinc-200'}"><span>${ok ? '✓ ' : ''}${lang === 'en' ? m.title_en : m.title}</span><span>+${fmtBillion(m.reward * (g.k0 / 1e8))}</span></div>
+                        </div>`;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              `}
+
+              ${tab === 'h' && h`<${HeatmapView} assets=${g.A} t=${t} onSelect=${s => { selectAsset(s); setTab('p'); }}/>`}
+
+              ${tab === 'o' && (g.O.length ? h`<table class="w-full"><thead>${th(t.thAsset, t.thOrder, t.thQty, t.thTargetPx, t.thLev, t.thAction)}</thead><tbody class="divide-y divide-zinc-800/70">${g.O.map(o => h`<tr key=${o.id}>
+                <td class="font-bold text-zinc-100"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${o.sym} size=${16}/><span>${o.sym}</span></div></td>
+                <td class=${o.side === 'buy' ? 'text-emerald-400' : 'text-rose-400'}>${o.side === 'buy' ? t.limitBuy : t.limitSell}</td>
+                <td>${o.q}</td>
+                <td>${usd(o.targetPx)}</td>
+                <td>${o.lev}x</td>
+                <td><button onClick=${() => { g.O = g.O.filter(x => x.id !== o.id); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] hover:bg-rose-500/30">${t.cancel}</button></td>
+              </tr>`)}</tbody></table>` : h`<p class="p-8 text-center text-zinc-500">${t.noLimitOrders}</p>`)}
+
+              ${tab === 'bank' && h`<div class="p-3 grid gap-3 sm:grid-cols-2">
+                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                  <div class="flex justify-between items-center"><b class="text-emerald-400 text-xs">${t.treasuryBonds}</b><b class="text-white">${usd(g.bonds)}</b></div>
+                  <p class="text-[11px] text-zinc-400">${t.treasuryDesc}</p>
+                  <input type="number" value=${bankAmt} onInput=${e => setBankAmt(e.target.value)}/>
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <button onClick=${() => { const v = Math.min(g.cash, Math.max(0, +bankAmt || 0)); g.cash -= v; g.bonds += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-emerald-600/25 border border-emerald-500/40 text-emerald-300 font-semibold">${t.buyBonds}</button>
+                    <button onClick=${() => { const v = Math.min(g.bonds, Math.max(0, +bankAmt || 0)); g.bonds -= v; g.cash += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-zinc-800 text-zinc-200 font-semibold">${t.withdraw}</button>
+                  </div>
+                </div>
+                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                  <div class="flex justify-between items-center"><b class="text-rose-400 text-xs">${t.bankDebt}</b><b class="text-rose-300">${usd(g.debt)}</b></div>
+                  <p class="text-[11px] text-zinc-400">${t.bankDebtDesc}</p>
+                  <input type="number" value=${bankAmt} onInput=${e => setBankAmt(e.target.value)}/>
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <button onClick=${() => { const maxL = Math.max(0, E * 2 - g.debt); const v = Math.min(maxL, Math.max(0, +bankAmt || 0)); g.debt += v; g.cash += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-rose-600/25 border border-rose-500/40 text-rose-300 font-semibold">${t.takeLoan}</button>
+                    <button onClick=${() => { const v = Math.min(g.cash, g.debt, Math.max(0, +bankAmt || 0)); g.debt -= v; g.cash -= v; saveGame(g); fr(); }} class="py-1.5 rounded bg-zinc-800 text-zinc-200 font-semibold">${t.payDebt}</button>
+                  </div>
+                </div>
+              </div>`}
+
+              ${tab === 'c' && h`<${BenchmarkChart} eqHist=${g.eqHist} spyHist=${g.spyHist} t=${t}/>`}
+
+              ${tab === 't' && h`<table class="w-full"><thead>${th(t.thDate, t.thAsset, t.thOperation, t.thQty, t.thPrice, t.thResult)}</thead><tbody class="divide-y divide-zinc-800/70">${g.L.slice(0, 45).map((x, i) => h`<tr key=${i}>
+                <td class="text-zinc-500">${tm(x.d, x.tk, lang)}</td>
+                <td class="font-bold text-zinc-200">${x.sym}</td>
+                <td>${x.k}</td>
+                <td>${x.q}</td>
+                <td>${usd(x.px)}</td>
+                <td class=${x.pnl ? cl(x.pnl) : 'text-zinc-500'}>${x.pnl ? usd(x.pnl) : '-'}</td>
+              </tr>`)}</tbody></table>`}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="pointer-events-none fixed bottom-2.5 right-3.5 z-40 select-none text-[11px] font-semibold tracking-wider text-zinc-500/50">
+      Dante Ronavov
+    </div>
+
+    <${CapitalModal} open=${capModalOpen} onClose=${() => setCapModalOpen(false)} currentCap=${cap} onApply=${applyCapitalChange} lang=${lang} t=${t}/>
+
+    <${NewsPortalModal}
+      open=${nm}
+      onClose=${() => setNm(false)}
+      nl=${nl}
+      g=${g}
+      nf=${nf}
+      setNf=${setNf}
+      newsQuery=${newsQuery}
+      setNewsQuery=${setNewsQuery}
+      onTriggerNews=${triggerManualNews}
+      onSelectAsset=${s => selectAsset(s)}
+      onOpenArticle=${art => setActiveArticle(art)}
+      lang=${lang}
+      t=${t}
+    />
+
+    <${ArticleReaderModal}
+      item=${activeArticle}
+      g=${g}
+      onClose=${() => setActiveArticle(null)}
+      onSelectAsset=${s => selectAsset(s)}
+      onSelectArticle=${art => setActiveArticle(art)}
+      lang=${lang}
+      t=${t}
+    />
+  </div>`;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h`<${App}/>`);
+</script>
+</body>
+</html>
