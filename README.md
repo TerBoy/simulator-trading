@@ -1,3 +1,9 @@
+
+# 📈 SIM·MARKET INSTITUTIONAL
+> **Play Live in Browser (Desktop Recommended):** [https://terboy.github.io/simulator-trading/](https://terboy.github.io/simulator-trading/)
+
+An institutional-grade financial terminal and stock market simulator built inside a single self-contained HTML file (3,374+ lines of code) with zero external API dependencies.
+
 # USER GUIDE & OPERATION MANUAL · SIM·MARKET INSTITUTIONAL
 
 Welcome to **SIM·MARKET INSTITUTIONAL**, your high-frequency corporate financial terminal! This guide details step-by-step how each module, market, investment tool, and ranking system works.
