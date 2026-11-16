@@ -181,8 +181,8 @@ const I18N = {
     thEmpire: 'Imperio / Activos',
     thWealth: 'Fortuna Actual',
     thSessionChg: 'Var. Sesión',
-    youManager: 'TÚ (Gestor Principal)',
-    yourFund: '🌎 Tu Fondo',
+    youManager: 'Username (TÚ)',
+    yourFund: 'Na',
     yourPortfolio: 'Tu Cartera',
     aumTitle: 'Capital de Clientes Institucionales (AUM)',
     aumSub: 'Supera al S&P 500 para atraer fondos de pensiones y cobrar 2% de comisión anual diaria.',
@@ -255,9 +255,13 @@ const I18N = {
     readFullTimer: 'Leer reportaje completo',
     profileBtn: 'Perfil',
     profileModalTitle: 'Estudio de Perfil Institucional & Avatar',
-    profileModalSub: 'Configura tu nombre, firma de inversión y logotipo para la terminal y el Top 100 Forbes.',
+    profileModalSub: 'Configura tu identidad ejecutiva, sede, título, emblema y preferencias de terminal.',
     managerNameLabel: 'Nombre del Gestor (Top 100 Forbes)',
     fundNameLabel: 'Nombre del Fondo / Firma',
+    roleTitleLabel: 'Cargo / Título Ejecutivo',
+    countryLabel: 'Sede / País (Ranking Forbes)',
+    defaultSpeedLabel: 'Velocidad al Iniciar Terminal',
+    accentColorLabel: 'Color del Emblema',
     avatarStudioLabel: 'Generador de Avatar & Logotipo Minimalista',
     initialsLabel: 'Iniciales (Máx. 4)',
     avatarStyleLabel: 'Estilo de Emblema',
@@ -266,8 +270,15 @@ const I18N = {
     styleDiamond: 'Diamante Quant',
     styleBull: 'Vector Alcista (Bull)',
     styleCrown: 'Corona Sovereign',
+    styleShield: 'Escudo Institucional',
+    styleHexagon: 'Hexágono Cuántico',
+    styleBars: 'Barras de Terminal',
+    styleGlobe: 'Orbe Global',
+    styleCompass: 'Brújula Macro',
     randomAvatarBtn: '🎲 Generar Avatar',
     uploadLogoBtn: '📁 Subir Imagen',
+    resetProfileBtn: 'Restaurar Predeterminado',
+    previewLabel: 'Vista Previa en Terminal y Forbes',
     saveProfileBtn: 'Guardar Perfil',
     suffixHint: 'Soporta sufijos: 500k, 10m, 50b, 1t'
   },
@@ -393,8 +404,8 @@ const I18N = {
     thEmpire: 'Holdings / Empire',
     thWealth: 'Net Worth',
     thSessionChg: 'Session Chg',
-    youManager: 'YOU (Managing Partner)',
-    yourFund: '🌎 Your Fund',
+    youManager: 'Username (YOU)',
+    yourFund: 'Na',
     yourPortfolio: 'Your Portfolio',
     aumTitle: 'Institutional Assets Under Management (AUM)',
     aumSub: 'Outperform the S&P 500 to attract pension funds and earn a 2% annual management fee daily.',
@@ -467,9 +478,13 @@ const I18N = {
     readFullTimer: 'Read full report',
     profileBtn: 'Profile',
     profileModalTitle: 'Institutional Profile & Avatar Studio',
-    profileModalSub: 'Customize your manager name, fund title, and logo across the terminal and Top 100 Forbes.',
+    profileModalSub: 'Customize your executive identity, headquarters, title, emblem, and terminal preferences.',
     managerNameLabel: 'Manager Name (Top 100 Forbes)',
     fundNameLabel: 'Fund / Firm Name',
+    roleTitleLabel: 'Executive Title / Role',
+    countryLabel: 'Headquarters / Country (Forbes)',
+    defaultSpeedLabel: 'Startup Terminal Speed',
+    accentColorLabel: 'Emblem Accent Color',
     avatarStudioLabel: 'Minimalist Avatar & Logo Generator',
     initialsLabel: 'Initials (Max 4)',
     avatarStyleLabel: 'Emblem Style',
@@ -478,8 +493,15 @@ const I18N = {
     styleDiamond: 'Quant Diamond',
     styleBull: 'Bull Vector',
     styleCrown: 'Sovereign Crown',
+    styleShield: 'Institutional Shield',
+    styleHexagon: 'Quantum Hexagon',
+    styleBars: 'Terminal Bars',
+    styleGlobe: 'Global Orb',
+    styleCompass: 'Macro Compass',
     randomAvatarBtn: '🎲 Generate Avatar',
     uploadLogoBtn: '📁 Upload Image',
+    resetProfileBtn: 'Reset Defaults',
+    previewLabel: 'Live Terminal & Forbes Preview',
     saveProfileBtn: 'Save Profile',
     suffixHint: 'Supports suffixes: 500k, 10m, 50b, 1t'
   }
@@ -508,18 +530,87 @@ const MEDIA_OUTLETS = [
   { name: 'CNBC Pro Desk', domain: 'cnbc.com', badge: 'CNBC' }
 ];
 
-function AssetLogo({ sym, size = 22 }) {
-  const [err, setErr] = useState(false);
-  useEffect(() => { setErr(false); }, [sym]);
+const COUNTRY_OPTIONS = [
+  '🇨🇴 Colombia', '🇺🇸 USA', '🇨🇭 Switzerland', '🇬🇧 UK',
+  '🇸🇬 Singapore', '🇦🇪 UAE', '🇪🇸 Spain', '🇯🇵 Japan', '🇧🇷 Brazil', '🇲🇽 Mexico'
+];
 
-  if (sym === 'GOLD') {
-    return h`<div style=${{ width: size, height: size }} class="rounded-full bg-zinc-800 border border-zinc-500 flex items-center justify-center shrink-0 font-black text-[9px] text-zinc-100" title="Gold XAU">Au</div>`;
+const ROLE_OPTIONS = [
+  'Managing Partner', 'Founder & CEO', 'Chief Investment Officer',
+  'Quantitative Portfolio Manager', 'Head of Macro Strategy'
+];
+
+const ACCENT_COLORS = [
+  { id: 'white', hex: '#ffffff', name: 'White' },
+  { id: 'platinum', hex: '#a1a1aa', name: 'Platinum' },
+  { id: 'emerald', hex: '#10b981', name: 'Emerald' },
+  { id: 'gold', hex: '#eab308', name: 'Gold' },
+  { id: 'cyan', hex: '#38bdf8', name: 'Cyan' },
+  { id: 'rose', hex: '#f43f5e', name: 'Crimson' }
+];
+
+const PROFILE_KEY = 'sim_market_profile_v1';
+
+const DEFAULT_PROFILE = {
+  name: 'Username',
+  fund: 'Na',
+  role: 'Managing Partner',
+  country: '🇨🇴 Colombia',
+  initials: 'UN',
+  style: 'octagon',
+  accent: '#ffffff',
+  defaultSpeed: 1,
+  customLogo: null
+};
+
+const BRAND_SVGS = {
+  GOLD: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#18181b" stroke="#eab308" strokeWidth="1.5"/><polygon points="10,20 12,13 20,13 22,20" fill="#eab308"/><polygon points="12,13 14,11 18,11 20,13" fill="#fde047"/></svg>`,
+  NVDA: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#76b900"/><path d="M7 16c3-4.5 7-6.5 11.5-6.5v2.5c-3.5 0-6.5 1.5-8.5 4 2 2.5 5 4 8.5 4v2.5C14 22.5 10 20.5 7 16zm11.5-4c3 0 5.5 1.5 7 4-1.5 2.5-4 4-7 4v-2c1.8 0 3.3-.8 4.2-2-.9-1.2-2.4-2-4.2-2v-2z" fill="#fff"/></svg>`,
+  AVGO: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#cc092f"/><path d="M7 18h3l2-5 3 8 3-10 2 7h5" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>`,
+  ASML: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#0f238c"/><circle cx="16" cy="16" r="7" fill="none" stroke="#38bdf8" strokeWidth="2.2"/><circle cx="16" cy="16" r="2.5" fill="#fff"/></svg>`,
+  INTC: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#0068b5"/><text x="16" y="19.5" textAnchor="middle" fill="#fff" fontSize="9.5" fontWeight="900" fontFamily="sans-serif">intel</text><rect x="23" y="10" width="2.5" height="2.5" fill="#38bdf8"/></svg>`,
+  AAPL: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#18181b" stroke="#52525b" strokeWidth="1"/><path d="M20.2 17.1c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.7-1.3-.1-2.5.8-3.1.8-.7 0-1.7-.7-2.8-.7-1.4 0-2.7.8-3.5 2.1-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7 1.3 0 1.7.7 2.8.7 1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4-.1 0-2.6-1-2.6-3.4zM18.1 10.9c.6-.7 1-1.7.9-2.7-.9 0-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.6 1 .1 1.9-.5 2.5-1.2z" fill="#fff"/></svg>`,
+  GOOGL: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#ffffff"/><path d="M23.5 16.2c0-.6-.1-1.1-.2-1.6H16v3.1h4.2c-.2 1-.8 1.9-1.7 2.4v2h2.7c1.6-1.5 2.3-3.6 2.3-5.9z" fill="#4285F4"/><path d="M16 24c2.1 0 3.9-.7 5.2-1.9l-2.7-2c-.7.5-1.6.8-2.5.8-2 0-3.6-1.3-4.2-3.1H9v2.1C10.3 22.4 13 24 16 24z" fill="#34A853"/><path d="M11.8 17.8c-.2-.5-.3-1.1-.3-1.8s.1-1.3.3-1.8v-2.1H9c-.6 1.2-.9 2.5-.9 3.9s.3 2.7.9 3.9l2.8-2.1z" fill="#FBBC05"/><path d="M16 11.1c1.2 0 2.2.4 3 1.2l2.3-2.3C19.9 8.7 18.1 8 16 8c-3 0-5.7 1.6-7 4.1l2.8 2.1c.6-1.8 2.2-3.1 4.2-3.1z" fill="#EA4335"/></svg>`,
+  AMZN: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#131921"/><text x="16" y="18" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="900" fontFamily="sans-serif">a</text><path d="M9 21.5c4.2 2.8 9.8 2.8 14 0" fill="none" stroke="#ff9900" strokeWidth="2" strokeLinecap="round"/><path d="M21 20l2.5 1.3-1.2 2.4" fill="none" stroke="#ff9900" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>`,
+  TSLA: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#e82127"/><path d="M8 10.5c5.2-1.3 10.8-1.3 16 0l-.8 2c-2.2-.5-4.3-.8-6.2-.8L16 24l-1-12.3c-1.9 0-4 .3-6.2.8l-.8-2z" fill="#fff"/></svg>`,
+  RIVN: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#09090b" stroke="#eab308" strokeWidth="1.2"/><polygon points="16,7 21,12 16,16 11,12" fill="none" stroke="#eab308" strokeWidth="1.8"/><polygon points="16,16 21,20 16,25 11,20" fill="none" stroke="#eab308" strokeWidth="1.8"/></svg>`,
+  LMT: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#003366"/><polygon points="16,7 18.5,14 25,14 19.5,18 21.5,24 16,20 10.5,24 12.5,18 7,14 13.5,14" fill="none" stroke="#fff" strokeWidth="1.6"/></svg>`,
+  WMT: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#0071ce"/><g stroke="#ffc220" strokeWidth="2.4" strokeLinecap="round"><line x1="16" y1="7" x2="16" y2="11.5"/><line x1="16" y1="20.5" x2="16" y2="25"/><line x1="8.2" y1="11.5" x2="12.1" y2="13.7"/><line x1="19.9" y1="18.3" x2="23.8" y2="20.5"/><line x1="23.8" y1="11.5" x2="19.9" y2="13.7"/><line x1="12.1" y1="18.3" x2="8.2" y2="20.5"/></g></svg>`,
+  KO: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#f40009"/><path d="M7 18c4-4 14-4 18 0" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/><text x="16" y="15" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="900" fontStyle="italic" fontFamily="serif">Coca-Cola</text></svg>`,
+  PEP: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#004b93"/><path d="M6 14a10 10 0 0 1 20 0c-5 2-12 0-20 0z" fill="#e32934"/><path d="M6 15c7 0 14 2 20 0-3 3-13 4-20 0z" fill="#fff"/></svg>`,
+  PFE: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#0093d0"/><ellipse cx="16" cy="16" rx="10" ry="6" transform="rotate(-25 16 16)" fill="none" stroke="#fff" strokeWidth="2"/><text x="16" y="18.5" textAnchor="middle" fill="#fff" fontSize="7.5" fontWeight="900" fontFamily="sans-serif">Pfizer</text></svg>`,
+  SPY: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#0f5132"/><polyline points="7,21 13,15 17,18 25,10" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><polyline points="20,10 25,10 25,15" fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>`,
+  BTC: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#f7931a"/><text x="16" y="22" textAnchor="middle" fill="#fff" fontSize="17" fontWeight="900" fontFamily="sans-serif">₿</text></svg>`,
+  XOM: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#fe000c"/><path d="M9 11l6 5-6 5M17 11l6 5-6 5" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>`,
+  CVX: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#ffffff"/><polyline points="9,10 16,14.5 23,10 23,14.5 16,19 9,14.5" fill="#0054a6"/><polyline points="9,16.5 16,21 23,16.5 23,21 16,25.5 9,21" fill="#ed1c24"/></svg>`,
+  ETH: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#627eea"/><polygon points="16,6 10,16 16,19.5 22,16" fill="#fff"/><polygon points="16,21 10,17.5 16,26 22,17.5" fill="#dbeafe"/></svg>`,
+  BNB: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#f3ba2f"/><polygon points="16,8 19.5,11.5 16,15 12.5,11.5" fill="#fff"/><polygon points="16,17 19.5,20.5 16,24 12.5,20.5" fill="#fff"/><polygon points="9.5,14.5 11.5,16.5 9.5,18.5 7.5,16.5" fill="#fff"/><polygon points="22.5,14.5 24.5,16.5 22.5,18.5 20.5,16.5" fill="#fff"/></svg>`,
+  SOL: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#141418" stroke="#14f195" strokeWidth="1.2"/><polygon points="10,10 23,10 21,12.8 8,12.8" fill="#14f195"/><polygon points="8,14.6 21,14.6 23,17.4 10,17.4" fill="#9945ff"/><polygon points="10,19.2 23,19.2 21,22 8,22" fill="#14f195"/></svg>`,
+  TQQQ: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#064e3b" stroke="#10b981" strokeWidth="1.5"/><text x="16" y="20" textAnchor="middle" fill="#34d399" fontSize="11" fontWeight="900">3X↗</text></svg>`,
+  SQQQ: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#4c0519" stroke="#f43f5e" strokeWidth="1.5"/><text x="16" y="20" textAnchor="middle" fill="#fb7185" fontSize="11" fontWeight="900">-3X↘</text></svg>`,
+  SOXL: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#065f46" stroke="#34d399" strokeWidth="1.5"/><text x="16" y="19.5" textAnchor="middle" fill="#ffffff" fontSize="9.5" fontWeight="900">CHP+</text></svg>`,
+  SOXS: () => h`<svg viewBox="0 0 32 32" class="w-full h-full"><circle cx="16" cy="16" r="15" fill="#881337" stroke="#fb7185" strokeWidth="1.5"/><text x="16" y="19.5" textAnchor="middle" fill="#ffffff" fontSize="9.5" fontWeight="900">CHP-</text></svg>`
+};
+
+function AssetLogo({ sym, size = 22 }) {
+  const [srcIdx, setSrcIdx] = useState(0);
+  useEffect(() => { setSrcIdx(0); }, [sym]);
+
+  if (BRAND_SVGS[sym]) {
+    return h`<div style=${{ width: size, height: size }} class="shrink-0 flex items-center justify-center overflow-hidden rounded-full">${BRAND_SVGS[sym]()}</div>`;
   }
+
   const domain = ASSET_DOMAINS[sym];
-  if (!domain || err) {
+  const sources = domain ? [
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+  ] : [];
+
+  if (!sources.length || srcIdx >= sources.length) {
     return h`<div style=${{ width: size, height: size }} class="rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0 font-bold text-[9px] text-zinc-300">${sym.slice(0, 3)}</div>`;
   }
-  return h`<img src=${`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt=${sym} loading="lazy" onError=${() => setErr(true)} style=${{ width: size, height: size }} class="rounded-full bg-white p-[1.5px] object-contain border border-zinc-700 shrink-0"/>`;
+
+  return h`<img src=${sources[srcIdx]} alt=${sym} loading="lazy" onError=${() => setSrcIdx(i => i + 1)} style=${{ width: size, height: size }} class="rounded-full bg-white p-[1.5px] object-contain border border-zinc-700 shrink-0"/>`;
 }
 
 function MediaLogo({ outlet, size = 16 }) {
@@ -529,7 +620,7 @@ function MediaLogo({ outlet, size = 16 }) {
   if (err) {
     return h`<span class="px-1 py-0.2 rounded bg-zinc-800 text-white font-black text-[9px]">${info.badge}</span>`;
   }
-  return h`<img src=${`https://www.google.com/s2/favicons?domain=${info.domain}&sz=32`} alt=${info.name} loading="lazy" onError=${() => setErr(true)} style=${{ width: size, height: size }} class="rounded-sm bg-white p-[1px] object-contain shrink-0"/>`;
+  return h`<img src=${`https://icons.duckduckgo.com/ip3/${info.domain}.ico`} alt=${info.name} loading="lazy" onError=${() => setErr(true)} style=${{ width: size, height: size }} class="rounded-sm bg-white p-[1px] object-contain shrink-0"/>`;
 }
 
 const SEC = {
@@ -1154,12 +1245,16 @@ const fmtCap = (millions) => {
 };
 
 const fmtBillion = (val) => {
-  if (val >= 1e12) return '$' + (val / 1e12).toFixed(2) + ' T';
-  if (val >= 1e9) return '$' + (val / 1e9).toFixed(1) + ' B';
-  if (val >= 1e6) return '$' + (val / 1e6).toFixed(1) + ' M';
-  if (val >= 1e3) return '$' + (val / 1e3).toFixed(1) + ' K';
+  const abs = Math.abs(val);
+  const sign = val < 0 ? '-' : '';
+  if (abs >= 1e12) return sign + '$' + (abs / 1e12).toFixed(2) + ' T';
+  if (abs >= 1e9) return sign + '$' + (abs / 1e9).toFixed(1) + ' B';
+  if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(1) + ' M';
+  if (abs >= 1e3) return sign + '$' + (abs / 1e3).toFixed(1) + ' K';
   return usd(val);
 };
+
+const scaleAssetLiq = (baseLiq, capUsd) => Math.max(baseLiq, baseLiq * (capUsd / 1e6));
 
 const nz = () => { let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2832 * Math.random()); };
 const nb = a => a.bk = Array.from({ length: 12 }, () => Math.random() * 0.8 + 0.2);
@@ -1185,7 +1280,7 @@ function mv(a, r, k) {
     o, c: a.p,
     h: Math.max(o, a.p) * (1 + Math.abs(nz()) * w),
     l: Math.min(o, a.p) * (1 - Math.abs(nz()) * w),
-    v: Math.round(a.liq * (0.1 + Math.random() * 0.15) * (1 + Math.min(3, Math.abs(r) / a.sig)))
+    v: Math.max(1, Math.round(a.liq * (0.1 + Math.random() * 0.15) * (1 + Math.min(3, Math.abs(r) / a.sig))))
   });
   if (a.c.length > 400) { a.c.shift(); a.base++; }
   a.bias *= 0.93;
@@ -1209,9 +1304,9 @@ function evolve(g, k, bs, f) {
   if (f('SOXL')) R.SOXL = chipAvg * 3.2 + nz() * 0.001;
   if (f('SOXS')) R.SOXS = -chipAvg * 3.2 + nz() * 0.001;
 
-  if (f('SPY')) {
+  if (f('SPY') && L.length > 0) {
     const st = L.filter(a => !CR.includes(a.sym));
-    R.SPY = st.reduce((s, a) => s + R[a.sym], 0) / st.length;
+    if (st.length > 0) R.SPY = st.reduce((s, a) => s + R[a.sym], 0) / st.length;
   }
   g.A.forEach(a => { if (a.sym in R) mv(a, R[a.sym], k); });
 }
@@ -1270,7 +1365,7 @@ function mkGame(cap = 1e8, savedData = null) {
     stats: { trades: 0, shortWins: 0, limitsFilled: 0, blitzWins: 0, optionWins: 0 }
   };
 
-  if (savedData && savedData.A) {
+  if (savedData && Array.isArray(savedData.A) && savedData.A.length > 0) {
     Object.assign(g, savedData);
     g.a = {};
     g.A.forEach(a => { g.a[a.sym] = a; });
@@ -1286,7 +1381,7 @@ function mkGame(cap = 1e8, savedData = null) {
 
   g.A = AS.map(([sym, name, sec, p, sig, liq, sp, bm, sh]) => {
     const a = {
-      sym, name, sec, p, sig, liq: liq * Math.max(1, safeCap / 1e6), sp, bm, sh,
+      sym, name, sec, p, sig, liq: scaleAssetLiq(liq, safeCap), sp, bm, sh,
       mu: CR.includes(sym) || sec === 'ETF' ? 0 : 2e-5, rv: RV[sym],
       gp: sec === 'ENE' ? ({ XOM: 'OIL', CVX: 'OIL', GOLD: 'GOLD', SPY: 'SPY' }[sym] || 'CRY') : sec,
       c: [], mk: [], base: 0, bias: 0, vm: 1, mom: 0, mN: 0, cr: 0, d0: p
@@ -1298,7 +1393,7 @@ function mkGame(cap = 1e8, savedData = null) {
   g.spyBase = g.a.SPY.p;
   g.billionaires = initBillionaires(g);
   scheduleEarnings(g);
-  fire(g, true);
+  fire(g, false);
   return g;
 }
 
@@ -1494,30 +1589,34 @@ const getMaxLev = g => (g.upgrades?.t2 ? 20 : 10);
 
 function exec(g, s, side, q, lev = 1, kind = null) {
   const a = g.a[s];
+  if (!a) return 'Activo no encontrado';
   q = Math.floor(q * 1e4) / 1e4;
   if (!(q > 0)) return 'Cantidad inválida / Invalid quantity';
   lev = Math.max(1, Math.min(getMaxLev(g), lev || 1));
 
   const P = g.P[s] || (g.P[s] = { q: 0, avg: 0, margin: 0, lev: 1, div: 0, rl: 0, sl: 0, tp: 0 });
+  const prevQ = P.q;
   const w = walk(a, side, q, !!g.upgrades?.twap);
   const notional = w.v * q;
   const fee = notional * getFeeRate(g);
   let pnl = 0;
+  let rem = 0;
 
   if (side === 'buy') {
     if (P.q < 0) {
       const closeQ = Math.min(q, Math.abs(P.q));
+      const closeNotional = w.v * closeQ;
+      const closeFee = closeNotional * getFeeRate(g);
       const ratio = closeQ / Math.abs(P.q);
       const releasedMargin = P.margin * ratio;
-      pnl = (P.avg - w.v) * closeQ - fee;
+      pnl = (P.avg - w.v) * closeQ - closeFee;
       if (pnl > 0) g.stats.shortWins++;
       g.cash += releasedMargin + pnl;
-      P.margin -= releasedMargin;
+      P.margin = Math.max(0, P.margin - releasedMargin);
       P.rl += pnl;
       P.q = Math.round((P.q + closeQ) * 1e4) / 1e4;
       if (Math.abs(P.q) < 1e-4) { P.q = 0; P.avg = 0; P.margin = 0; P.lev = 1; P.sl = P.tp = 0; }
-      const rem = Math.round((q - closeQ) * 1e4) / 1e4;
-      if (rem > 0) return exec(g, s, 'buy', rem, lev, kind);
+      rem = Math.round((q - closeQ) * 1e4) / 1e4;
     } else {
       const reqMargin = notional / lev;
       if (reqMargin + fee > g.cash) return `Insufficient margin (${usd(reqMargin + fee)})`;
@@ -1526,21 +1625,22 @@ function exec(g, s, side, q, lev = 1, kind = null) {
       P.avg = (P.avg * P.q + notional) / newQ;
       P.q = newQ;
       P.margin += reqMargin;
-      P.lev = Math.round((P.q * P.avg) / P.margin * 10) / 10;
+      P.lev = Math.round((P.q * P.avg) / Math.max(1e-6, P.margin) * 10) / 10;
     }
   } else {
     if (P.q > 0) {
       const closeQ = Math.min(q, P.q);
+      const closeNotional = w.v * closeQ;
+      const closeFee = closeNotional * getFeeRate(g);
       const ratio = closeQ / P.q;
       const releasedMargin = P.margin * ratio;
-      pnl = (w.v - P.avg) * closeQ - fee;
+      pnl = (w.v - P.avg) * closeQ - closeFee;
       g.cash += releasedMargin + pnl;
-      P.margin -= releasedMargin;
+      P.margin = Math.max(0, P.margin - releasedMargin);
       P.rl += pnl;
       P.q = Math.round((P.q - closeQ) * 1e4) / 1e4;
       if (P.q < 1e-4) { P.q = 0; P.avg = 0; P.margin = 0; P.lev = 1; P.sl = P.tp = 0; }
-      const rem = Math.round((q - closeQ) * 1e4) / 1e4;
-      if (rem > 0) return exec(g, s, 'sell', rem, lev, kind);
+      rem = Math.round((q - closeQ) * 1e4) / 1e4;
     } else {
       const reqMargin = notional / lev;
       if (reqMargin + fee > g.cash) return `Insufficient margin for Short (${usd(reqMargin + fee)})`;
@@ -1550,18 +1650,28 @@ function exec(g, s, side, q, lev = 1, kind = null) {
       P.avg = (P.avg * absOld + notional) / newAbs;
       P.q = -newAbs;
       P.margin += reqMargin;
-      P.lev = Math.round((newAbs * P.avg) / P.margin * 10) / 10;
+      P.lev = Math.round((newAbs * P.avg) / Math.max(1e-6, P.margin) * 10) / 10;
     }
   }
 
+  const execQ = rem > 0 ? Math.round((q - rem) * 1e4) / 1e4 : q;
+  const execFee = w.v * execQ * getFeeRate(g);
   const I = Math.log(w.l / a.p), c = a.c[a.c.length - 1];
-  a.p = w.l; c.c = a.p; c.h = Math.max(c.h, a.p); c.l = Math.min(c.l, a.p); c.v += q;
+  a.p = w.l;
+  if (c) { c.c = a.p; c.h = Math.max(c.h, a.p); c.l = Math.min(c.l, a.p); c.v += execQ; }
   a.mom = I * 0.12; a.mN = 6; a.cr = -I * 0.12 * 6 * 0.6 / 5;
   a.mk.push({ i: a.base + a.c.length - 1, s: side, px: w.v });
 
-  const label = kind || (side === 'buy' ? (P.q >= 0 ? `Buy ${lev > 1 ? lev + 'x' : ''}` : 'Cover Short') : (P.q < 0 ? `Short ${lev}x` : 'Sell'));
-  g.L.unshift({ d: g.d, tk: g.tk, sym: s, k: label.trim(), q, px: w.v, fee, pnl });
+  const defaultLabel = side === 'buy'
+    ? (prevQ < 0 ? 'Cover Short' : `Buy ${lev > 1 ? lev + 'x' : ''}`)
+    : (prevQ > 0 ? 'Sell Long' : `Short ${lev}x`);
+  const label = kind || defaultLabel;
+  g.L.unshift({ d: g.d, tk: g.tk, sym: s, k: label.trim(), q: execQ, px: w.v, fee: execFee, pnl });
   g.stats.trades++;
+
+  if (rem > 0) {
+    return exec(g, s, side, rem, lev, kind);
+  }
   return null;
 }
 
@@ -1670,6 +1780,7 @@ function check(g) {
 
   Object.entries(g.P).forEach(([s, p]) => {
     const a = g.a[s];
+    if (!a) return;
     if (p.q > 0) {
       const uPnl = (a.p - p.avg) * p.q;
       if (p.margin > 0 && uPnl <= -p.margin * 0.85) {
@@ -1708,18 +1819,11 @@ function night(g) {
     if (g.OP[i].daysLeft <= 0) closeOptionContract(g, g.OP[i].id, true);
   }
 
-  let earningsToday = null;
   if (g.earningsCal && g.earningsCal.length) {
     g.earningsCal.forEach(e => e.inDays -= 1);
-    const due = g.earningsCal.find(e => e.inDays <= 0);
-    if (due) earningsToday = due.sym;
     g.earningsCal = g.earningsCal.filter(e => e.inDays > 0);
     if (g.earningsCal.length === 0) scheduleEarnings(g);
   }
-
-  if (earningsToday) specialEvent(g, earningsToday);
-  else if (Math.random() < 0.35) specialEvent(g);
-  else fire(g);
 
   evolve(g, 2.5, 7, s => !CR.includes(s));
   for (let i = 0; i < 4; i++) evolve(g, 1.8, 3, s => CR.includes(s));
@@ -1766,7 +1870,9 @@ function tick(g) {
 const uf = (a, side, usdVal, lev = 1, g = null) => {
   const feeRate = g ? getFeeRate(g) : 1e-4;
   const s = side === 'buy' ? 1 : -1;
-  let b = (usdVal * lev) / (1 + s * feeRate), q = 0, i = 0;
+  // Descontar el fee estimado del presupuesto de margen disponible para evitar "Insufficient margin" al 100%
+  const netMarginBudget = usdVal / (1 + feeRate * lev);
+  let b = netMarginBudget * lev, q = 0, i = 0;
   while (b > 0 && i < 5000) {
     const L = lv(a, s, i++), c = L.px * L.sz;
     if (b >= c) { q += L.sz; b -= c; } else { q += b / L.px; b = 0; }
@@ -1776,7 +1882,7 @@ const uf = (a, side, usdVal, lev = 1, g = null) => {
 
 const eq = g => {
   const posVal = Object.entries(g.P).reduce((s, [k, p]) => {
-    if (!p.q) return s;
+    if (!p.q || !g.a[k]) return s;
     const px = g.a[k].p;
     const uPnl = p.q > 0 ? (px - p.avg) * p.q : (p.avg - px) * Math.abs(p.q);
     return s + p.margin + uPnl;
@@ -1842,58 +1948,104 @@ function parseCapitalInput(raw) {
 }
 
 function ProfileAvatar({ profile, size = 26 }) {
-  const init = ((profile?.initials || 'SP').trim() || 'SP').toUpperCase().slice(0, 4);
+  const init = ((profile?.initials || 'UN').trim() || 'UN').toUpperCase().slice(0, 4);
   const style = profile?.style || 'octagon';
+  const accent = profile?.accent || '#ffffff';
+
   if (profile?.customLogo) {
-    return h`<img src=${profile.customLogo} alt=${init} style=${{ width: size, height: size }} class="rounded-md bg-black object-cover border border-zinc-600 shrink-0"/>`;
+    return h`<img src=${profile.customLogo} alt=${init} style=${{ width: size, height: size, borderColor: accent }} class="rounded-md bg-black object-cover border shrink-0"/>`;
   }
   if (style === 'diamond') {
     return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0 rounded">
       <rect width="36" height="36" rx="5" fill="#060607" stroke="#3f3f46" strokeWidth="1.2"/>
-      <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke="#ffffff" strokeWidth="1.6"/>
-      <text x="18" y="21" textAnchor="middle" fill="#ffffff" fontSize="9.5" fontWeight="900">${init}</text>
+      <polygon points="18,4 32,18 18,32 4,18" fill="none" stroke=${accent} strokeWidth="1.6"/>
+      <text x="18" y="21" textAnchor="middle" fill=${accent} fontSize="9.5" fontWeight="900">${init}</text>
     </svg>`;
   }
   if (style === 'bull') {
     return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0 rounded">
-      <rect width="36" height="36" rx="5" fill="#060607" stroke="#ffffff" strokeWidth="1.4"/>
-      <path d="M8 10 L13 16 L23 16 L28 10 M13 16 L15 27 L21 27 L23 16" fill="none" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="18" cy="10" r="1.5" fill="#ffffff"/>
+      <rect width="36" height="36" rx="5" fill="#060607" stroke=${accent} strokeWidth="1.4"/>
+      <path d="M8 10 L13 16 L23 16 L28 10 M13 16 L15 27 L21 27 L23 16" fill="none" stroke=${accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="18" cy="10" r="1.5" fill=${accent}/>
     </svg>`;
   }
   if (style === 'crown') {
     return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0 rounded">
       <rect width="36" height="36" rx="5" fill="#060607" stroke="#52525b" strokeWidth="1.2"/>
-      <path d="M7 24 L9 12 L18 18 L27 12 L29 24 Z" fill="none" stroke="#ffffff" strokeWidth="1.6" strokeLinejoin="round"/>
-      <text x="18" y="31" textAnchor="middle" fill="#a1a1aa" fontSize="7" fontWeight="900">${init}</text>
+      <path d="M7 24 L9 12 L18 18 L27 12 L29 24 Z" fill="none" stroke=${accent} strokeWidth="1.6" strokeLinejoin="round"/>
+      <text x="18" y="31" textAnchor="middle" fill="#d4d4d8" fontSize="7" fontWeight="900">${init}</text>
+    </svg>`;
+  }
+  if (style === 'shield') {
+    return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0">
+      <path d="M18 3 L30 7 V17 C30 25 24.5 30.5 18 33 C11.5 30.5 6 25 6 17 V7 Z" fill="#060607" stroke=${accent} strokeWidth="1.6" strokeLinejoin="round"/>
+      <text x="18" y="21" textAnchor="middle" fill=${accent} fontSize="9.5" fontWeight="900">${init}</text>
+    </svg>`;
+  }
+  if (style === 'hexagon') {
+    return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0">
+      <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="#060607" stroke=${accent} strokeWidth="1.6"/>
+      <polygon points="18,6 28,12 28,24 18,30 8,24 8,12" fill="none" stroke="#3f3f46" strokeWidth="0.9"/>
+      <text x="18" y="21.5" textAnchor="middle" fill=${accent} fontSize="9.5" fontWeight="900">${init}</text>
+    </svg>`;
+  }
+  if (style === 'bars') {
+    return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0 rounded">
+      <rect width="36" height="36" rx="6" fill="#060607" stroke=${accent} strokeWidth="1.4"/>
+      <rect x="8" y="20" width="4.5" height="9" rx="1" fill="#71717a"/>
+      <rect x="15.7" y="14" width="4.5" height="15" rx="1" fill="#d4d4d8"/>
+      <rect x="23.5" y="7" width="4.5" height="22" rx="1" fill=${accent}/>
+    </svg>`;
+  }
+  if (style === 'globe') {
+    return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0">
+      <circle cx="18" cy="18" r="15" fill="#060607" stroke=${accent} strokeWidth="1.5"/>
+      <ellipse cx="18" cy="18" rx="7" ry="15" fill="none" stroke="#3f3f46" strokeWidth="1"/>
+      <line x1="3" y1="18" x2="33" y2="18" stroke="#3f3f46" strokeWidth="1"/>
+      <rect x="7" y="13" width="22" height="10" rx="2" fill="#060607"/>
+      <text x="18" y="21" textAnchor="middle" fill=${accent} fontSize="9.5" fontWeight="900">${init}</text>
+    </svg>`;
+  }
+  if (style === 'compass') {
+    return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0">
+      <circle cx="18" cy="18" r="15" fill="#060607" stroke="#52525b" strokeWidth="1.3"/>
+      <polygon points="18,4 21.5,14.5 32,18 21.5,21.5 18,32 14.5,21.5 4,18 14.5,14.5" fill="none" stroke=${accent} strokeWidth="1.4" strokeLinejoin="round"/>
+      <circle cx="18" cy="18" r="2.2" fill=${accent}/>
     </svg>`;
   }
   if (style === 'monogram') {
     return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0 rounded">
-      <rect width="36" height="36" rx="6" fill="#060607" stroke="#ffffff" strokeWidth="1.5"/>
-      <text x="18" y="22" textAnchor="middle" fill="#ffffff" fontSize="11.5" fontWeight="900" letterSpacing="0.5">${init}</text>
+      <rect width="36" height="36" rx="6" fill="#060607" stroke=${accent} strokeWidth="1.5"/>
+      <text x="18" y="22" textAnchor="middle" fill=${accent} fontSize="11.5" fontWeight="900" letterSpacing="0.5">${init}</text>
     </svg>`;
   }
-  // Default: Octagon matching SIM·MARKET aesthetic
   return h`<svg viewBox="0 0 36 36" style=${{ width: size, height: size }} class="shrink-0">
-    <polygon points="10,2 26,2 34,10 34,26 26,34 10,34 2,26 2,10" fill="#060607" stroke="#ffffff" strokeWidth="1.6"/>
-    <text x="18" y="21.5" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="900">${init}</text>
+    <polygon points="10,2 26,2 34,10 34,26 26,34 10,34 2,26 2,10" fill="#060607" stroke=${accent} strokeWidth="1.6"/>
+    <text x="18" y="21.5" textAnchor="middle" fill=${accent} fontSize="10" fontWeight="900">${init}</text>
   </svg>`;
 }
 
 function ProfileModal({ open, onClose, profile, onSave, t }) {
-  const [name, setName] = useState(profile.name || '');
-  const [fund, setFund] = useState(profile.fund || '');
-  const [initials, setInitials] = useState(profile.initials || 'SP');
-  const [style, setStyle] = useState(profile.style || 'octagon');
+  const [name, setName] = useState(profile.name || DEFAULT_PROFILE.name);
+  const [fund, setFund] = useState(profile.fund || DEFAULT_PROFILE.fund);
+  const [role, setRole] = useState(profile.role || DEFAULT_PROFILE.role);
+  const [country, setCountry] = useState(profile.country || DEFAULT_PROFILE.country);
+  const [initials, setInitials] = useState(profile.initials || DEFAULT_PROFILE.initials);
+  const [style, setStyle] = useState(profile.style || DEFAULT_PROFILE.style);
+  const [accent, setAccent] = useState(profile.accent || DEFAULT_PROFILE.accent);
+  const [defaultSpeed, setDefaultSpeed] = useState(profile.defaultSpeed ?? 1);
   const [customLogo, setCustomLogo] = useState(profile.customLogo || null);
 
   useEffect(() => {
     if (open) {
-      setName(profile.name || '');
-      setFund(profile.fund || '');
-      setInitials(profile.initials || 'SP');
-      setStyle(profile.style || 'octagon');
+      setName(profile.name || DEFAULT_PROFILE.name);
+      setFund(profile.fund || DEFAULT_PROFILE.fund);
+      setRole(profile.role || DEFAULT_PROFILE.role);
+      setCountry(profile.country || DEFAULT_PROFILE.country);
+      setInitials(profile.initials || DEFAULT_PROFILE.initials);
+      setStyle(profile.style || DEFAULT_PROFILE.style);
+      setAccent(profile.accent || DEFAULT_PROFILE.accent);
+      setDefaultSpeed(profile.defaultSpeed ?? 1);
       setCustomLogo(profile.customLogo || null);
     }
   }, [open, profile]);
@@ -1901,9 +2053,23 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
   if (!open) return null;
 
   const randomize = () => {
-    const styles = ['octagon', 'monogram', 'diamond', 'bull', 'crown'];
+    const styles = ['octagon', 'monogram', 'diamond', 'bull', 'crown', 'shield', 'hexagon', 'bars', 'globe', 'compass'];
     const nextStyle = styles[Math.floor(Math.random() * styles.length)];
+    const nextColor = ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)].hex;
     setStyle(nextStyle);
+    setAccent(nextColor);
+    setCustomLogo(null);
+  };
+
+  const resetDefaults = () => {
+    setName(DEFAULT_PROFILE.name);
+    setFund(DEFAULT_PROFILE.fund);
+    setRole(DEFAULT_PROFILE.role);
+    setCountry(DEFAULT_PROFILE.country);
+    setInitials(DEFAULT_PROFILE.initials);
+    setStyle(DEFAULT_PROFILE.style);
+    setAccent(DEFAULT_PROFILE.accent);
+    setDefaultSpeed(DEFAULT_PROFILE.defaultSpeed);
     setCustomLogo(null);
   };
 
@@ -1915,11 +2081,11 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
     reader.readAsDataURL(file);
   };
 
-  const previewProfile = { name, fund, initials, style, customLogo };
+  const previewProfile = { name, fund, role, country, initials, style, accent, defaultSpeed, customLogo };
 
   return h`
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" onClick=${onClose}>
-      <div class="${PN} w-full max-w-lg overflow-hidden border-zinc-700" onClick=${e => e.stopPropagation()}>
+      <div class="${PN} w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden border-zinc-700" onClick=${e => e.stopPropagation()}>
         <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#060607]">
           <div class="flex items-center gap-2">
             <${ProfileAvatar} profile=${previewProfile} size=${22}/>
@@ -1928,10 +2094,22 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
           <button onClick=${onClose} class="px-2 py-0.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs">✕</button>
         </div>
 
-        <div class="p-4 space-y-4">
+        <div class="p-4 space-y-3.5 overflow-y-auto">
           <p class="text-[11px] text-zinc-400">${t.profileModalSub}</p>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-2.5 rounded bg-[#060607] border border-zinc-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <${ProfileAvatar} profile=${previewProfile} size=${38}/>
+              <div class="min-w-0">
+                <div class="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">${t.previewLabel}</div>
+                <div class="text-xs font-black text-white truncate">${name.trim() || 'Username'} <span class="text-zinc-400 font-normal">· ${role}</span></div>
+                <div class="text-[10.5px] text-zinc-300 truncate">${fund.trim() || 'Na'} · <span class="text-zinc-400">${country}</span></div>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-[10px] font-bold text-zinc-200 shrink-0">${defaultSpeed}x</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <label class="block text-[11px] text-zinc-300">
               ${t.managerNameLabel}
               <input type="text" value=${name} onInput=${e => {
@@ -1941,16 +2119,40 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
                   const autoInit = v.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase();
                   if (autoInit) setInitials(autoInit);
                 }
-              }} placeholder="Ej: Sebastián Ps" class="mt-1 font-bold text-white"/>
+              }} placeholder="Username" class="mt-1 font-bold text-white"/>
             </label>
             <label class="block text-[11px] text-zinc-300">
               ${t.fundNameLabel}
-              <input type="text" value=${fund} onInput=${e => setFund(e.target.value)} placeholder="Ej: SP QUANT CAPITAL" class="mt-1 font-bold text-white"/>
+              <input type="text" value=${fund} onInput=${e => setFund(e.target.value)} placeholder="Na" class="mt-1 font-bold text-white"/>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <label class="block text-[11px] text-zinc-300">
+              ${t.roleTitleLabel}
+              <select value=${role} onChange=${e => setRole(e.target.value)} class="mt-1 text-xs font-semibold">
+                ${ROLE_OPTIONS.map(r => h`<option key=${r} value=${r}>${r}</option>`)}
+              </select>
+            </label>
+            <label class="block text-[11px] text-zinc-300">
+              ${t.countryLabel}
+              <select value=${country} onChange=${e => setCountry(e.target.value)} class="mt-1 text-xs font-semibold">
+                ${COUNTRY_OPTIONS.map(c => h`<option key=${c} value=${c}>${c}</option>`)}
+              </select>
             </label>
           </div>
 
           <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-3">
-            <div class="text-[10.5px] font-bold uppercase text-zinc-300">${t.avatarStudioLabel}</div>
+            <div class="flex items-center justify-between">
+              <div class="text-[10.5px] font-bold uppercase text-zinc-300">${t.avatarStudioLabel}</div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[9.5px] text-zinc-400 mr-1">${t.accentColorLabel}:</span>
+                ${ACCENT_COLORS.map(c => h`
+                  <button key=${c.id} type="button" title=${c.name} onClick=${() => setAccent(c.hex)} style=${{ backgroundColor: c.hex }} class="w-4 h-4 rounded-full border transition ${accent === c.hex ? 'scale-125 border-white ring-2 ring-zinc-500' : 'border-zinc-700 opacity-75 hover:opacity-100'}"></button>
+                `)}
+              </div>
+            </div>
+
             <div class="flex items-center gap-4">
               <div class="p-2 rounded-lg bg-[#050506] border border-zinc-700 flex items-center justify-center shrink-0">
                 <${ProfileAvatar} profile=${previewProfile} size=${56}/>
@@ -1965,6 +2167,11 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
                     ${t.avatarStyleLabel}
                     <select value=${style} onChange=${e => { setStyle(e.target.value); setCustomLogo(null); }} class="mt-0.5 text-xs">
                       <option value="octagon">${t.styleOctagon}</option>
+                      <option value="shield">${t.styleShield}</option>
+                      <option value="hexagon">${t.styleHexagon}</option>
+                      <option value="bars">${t.styleBars}</option>
+                      <option value="globe">${t.styleGlobe}</option>
+                      <option value="compass">${t.styleCompass}</option>
                       <option value="monogram">${t.styleMonogram}</option>
                       <option value="diamond">${t.styleDiamond}</option>
                       <option value="bull">${t.styleBull}</option>
@@ -1985,20 +2192,38 @@ function ProfileModal({ open, onClose, profile, onSave, t }) {
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 pt-2 border-t border-zinc-800">
-            <button onClick=${onClose} class="px-3 py-1.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs">${t.cancel}</button>
-            <button onClick=${() => {
-              onSave({
-                name: name.trim() || 'Sebastián Ps',
-                fund: fund.trim() || 'SP QUANT CAPITAL',
-                initials: (initials.trim() || 'SP').toUpperCase().slice(0, 4),
-                style,
-                customLogo
-              });
-              onClose();
-            }} class="px-4 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-black text-xs">
-              ${t.saveProfileBtn}
-            </button>
+          <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-zinc-300 font-semibold">${t.defaultSpeedLabel}</span>
+            <div class="flex gap-1">
+              ${[0, 1, 3, 10].map(spd => h`
+                <button key=${spd} type="button" onClick=${() => setDefaultSpeed(spd)} class="px-2.5 py-1 rounded text-[10.5px] font-bold border transition ${defaultSpeed === spd ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'}">
+                  ${spd === 0 ? 'Pause' : spd + 'x'}
+                </button>
+              `)}
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800">
+            <button type="button" onClick=${resetDefaults} class="px-2.5 py-1.5 rounded border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:text-white text-[11px]">${t.resetProfileBtn}</button>
+            <div class="flex gap-2">
+              <button type="button" onClick=${onClose} class="px-3 py-1.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white text-xs">${t.cancel}</button>
+              <button type="button" onClick=${() => {
+                onSave({
+                  name: name.trim() || 'Username',
+                  fund: fund.trim() || 'Na',
+                  role,
+                  country,
+                  initials: (initials.trim() || 'UN').toUpperCase().slice(0, 4),
+                  style,
+                  accent,
+                  defaultSpeed,
+                  customLogo
+                });
+                onClose();
+              }} class="px-4 py-1.5 rounded bg-white hover:bg-zinc-200 text-black font-black text-xs">
+                ${t.saveProfileBtn}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2091,7 +2316,7 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
 
   const calcEmaArr = (arr, period) => {
     const k = 2 / (period + 1);
-    let prev = arr[0];
+    let prev = arr[0] ?? a.p;
     return arr.map((v, i) => { prev = i === 0 ? v : v * k + prev * (1 - k); return prev; });
   };
 
@@ -2125,29 +2350,30 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
     return 100 - (100 / (1 + (gains / 14) / (losses / 14)));
   }).slice(st);
 
-  const curRsi = rsiArr[rsiArr.length - 1] || 50;
+  const curRsi = rsiArr[rsiArr.length - 1] ?? 50;
   const bullPct = Math.max(15, Math.min(85, Math.round(curRsi * 0.6 + 20 + a.bias * 1200)));
   const bearPct = 100 - bullPct;
 
-  let hi = Math.max(...cs.map(c => c.h)), lo = Math.min(...cs.map(c => c.l));
+  let hi = Math.max(...cs.map(c => c.h), a.p), lo = Math.min(...cs.map(c => c.l), a.p);
   if (bb) bBands.forEach(b => { if (b) { hi = Math.max(hi, b.u); lo = Math.min(lo, b.l); } });
   if (P.q !== 0) { hi = Math.max(hi, P.avg); lo = Math.min(lo, P.avg); }
   blitzList.forEach(b => { hi = Math.max(hi, b.entryPx); lo = Math.min(lo, b.entryPx); });
 
-  const pd = (hi - lo) * 0.09 || 1; hi += pd; lo -= pd;
-  const y = v => 8 + (hi - v) / (hi - lo) * (ph - 16);
-  const invY = py => hi - ((py - 8) / (ph - 16)) * (hi - lo);
+  const pd = (hi - lo) * 0.09 || Math.max(0.5, a.p * 0.01); hi += pd; lo -= pd;
+  const span = Math.max(1e-6, hi - lo);
+  const y = v => 8 + (hi - v) / span * (ph - 16);
+  const invY = py => hi - ((py - 8) / Math.max(1, ph - 16)) * span;
   const x = i => 18 + i * bw + bw / 2;
-  const vm = Math.max(...cs.map(c => c.v));
+  const vm = Math.max(...cs.map(c => c.v), 1);
 
-  const ln = (v, col, dash, lbl, bright = false) => v > 0 && v >= lo && v <= hi && h`<g key=${lbl + v}>
+  const ln = (v, col, dash, lbl, bright = false, uid = '') => v > 0 && v >= lo && v <= hi && h`<g key=${uid + '_' + lbl + '_' + v.toFixed(4)}>
     <line x1="14" x2=${pw} y1=${y(v)} y2=${y(v)} stroke=${col} strokeWidth=${bright ? '1.5' : '1'} strokeDasharray=${dash}/>
     <rect x=${pw + 2} y=${y(v) - 8} width="70" height="16" rx="2" fill=${bright ? '#fafafa' : col}/>
     <text x=${W - 4} y=${y(v) + 3.5} textAnchor="end" fill="#09090b" fontSize="9.5" fontWeight="900">${lbl} ${v.toFixed(2)}</text>
   </g>`;
 
   const pts = cs.map((c, i) => x(i) + ',' + y(c.c)).join(' ');
-  const hovCandle = hoverIdx !== null && cs[hoverIdx] ? cs[hoverIdx] : cs[cs.length - 1];
+  const hovCandle = (hoverIdx !== null && cs[hoverIdx]) ? cs[hoverIdx] : (cs[cs.length - 1] || { o: a.p, h: a.p, l: a.p, c: a.p });
 
   const onMouseMove = e => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -2164,7 +2390,7 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
     if (drawMode && hoverPrice) onAddLevel(Number(hoverPrice.toFixed(2)));
   };
 
-  const maxMacd = Math.max(...macdSlice.map(Math.abs), ...sigSlice.map(Math.abs), 0.01);
+  const maxMacd = Math.max(...macdSlice.map(Math.abs), ...sigSlice.map(Math.abs), 1e-4);
   const rsiTop = H - hRsi - hMacd;
   const macdTop = H - hMacd;
 
@@ -2188,13 +2414,13 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
 
       <g>
         <text x="7" y="11" textAnchor="middle" fill="#10b981" fontSize="8" fontWeight="bold">${bullPct}%</text>
-        <rect x="4" y="15" width="5" height=${(ph - 30) * (bullPct / 100)} fill="#10b981" rx="2"/>
-        <rect x="4" y=${15 + (ph - 30) * (bullPct / 100)} width="5" height=${(ph - 30) * (bearPct / 100)} fill="#f43f5e" rx="2"/>
+        <rect x="4" y="15" width="5" height=${Math.max(0, (ph - 30) * (bullPct / 100))} fill="#10b981" rx="2"/>
+        <rect x="4" y=${15 + (ph - 30) * (bullPct / 100)} width="5" height=${Math.max(0, (ph - 30) * (bearPct / 100))} fill="#f43f5e" rx="2"/>
         <text x="7" y=${ph - 4} textAnchor="middle" fill="#f43f5e" fontSize="8" fontWeight="bold">${bearPct}%</text>
       </g>
 
       ${[0, 1, 2, 3, 4].map(k => {
-        const v = lo + (hi - lo) * k / 4;
+        const v = lo + span * k / 4;
         return h`<g key=${k}><line x1="14" x2=${pw} y1=${y(v)} y2=${y(v)} stroke="#18181b"/><text x=${W - 4} y=${y(v) + 3} textAnchor="end" fill="#71717a" fontSize="10">${v.toFixed(2)}</text></g>`;
       })}
 
@@ -2211,7 +2437,7 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
       ${sma && h`<polyline points=${sm.map((v, i) => v && x(i) + ',' + y(v)).filter(Boolean).join(' ')} fill="none" stroke="#d4d4d8" strokeWidth="1.4"/>`}
       ${ema && h`<polyline points=${em.map((v, i) => v && x(i) + ',' + y(v)).filter(Boolean).join(' ')} fill="none" stroke="#38bdf8" strokeWidth="1.4"/>`}
 
-      ${customLevels.map(lvPx => ln(lvPx, lvPx >= a.p ? '#fb7185' : '#34d399', '5 3', lvPx >= a.p ? 'RES' : 'SUP'))}
+      ${customLevels.map((lvPx, idx) => ln(lvPx, lvPx >= a.p ? '#fb7185' : '#34d399', '5 3', lvPx >= a.p ? 'RES' : 'SUP', false, 'lvl_' + idx))}
 
       ${blitzList.map(b => {
         const Y = y(b.entryPx);
@@ -2224,17 +2450,20 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
         </g>`;
       })}
 
-      ${ln(a.p, '#ffffff', '2 2', '', true)}
-      ${ln(P.q !== 0 ? P.avg : 0, '#e4e4e7', '6 4', P.q > 0 ? 'LONG' : 'SHRT')}
-      ${ln(P.q !== 0 ? P.sl : 0, '#f43f5e', '2 2', 'SL')}
-      ${ln(P.q !== 0 ? P.tp : 0, '#10b981', '2 2', 'TP')}
+      ${ln(a.p, '#ffffff', '2 2', '', true, 'cur')}
+      ${ln(P.q !== 0 ? P.avg : 0, '#e4e4e7', '6 4', P.q > 0 ? 'LONG' : 'SHRT', false, 'pos')}
+      ${ln(P.q !== 0 ? P.sl : 0, '#f43f5e', '2 2', 'SL', false, 'sl')}
+      ${ln(P.q !== 0 ? P.tp : 0, '#10b981', '2 2', 'TP', false, 'tp')}
 
       ${hoverIdx !== null && cs[hoverIdx] && h`<g>
         <line x1=${x(hoverIdx)} x2=${x(hoverIdx)} y1="0" y2=${H} stroke="#52525b" strokeDasharray="3 3" strokeWidth="0.9"/>
         ${hoverPrice && h`<line x1="14" x2=${pw} y1=${y(hoverPrice)} y2=${y(hoverPrice)} stroke=${drawMode ? '#ffffff' : '#52525b'} strokeDasharray="3 3" strokeWidth="1"/>`}
       </g>`}
 
-      ${vol && cs.map((c, i) => h`<rect key=${'v' + i} x=${x(i) - bw * 0.35} y=${ph + hv - 2 - c.v / vm * (hv - 6)} width=${bw * 0.7} height=${c.v / vm * (hv - 6)} fill=${c.c >= c.o ? '#10b98138' : '#f43f5e38'}/>`)}
+      ${vol && cs.map((c, i) => {
+        const barH = Math.max(0, (c.v / vm) * (hv - 6));
+        return h`<rect key=${'v' + i} x=${x(i) - bw * 0.35} y=${ph + hv - 2 - barH} width=${bw * 0.7} height=${barH} fill=${c.c >= c.o ? '#10b98138' : '#f43f5e38'}/>`;
+      })}
 
       ${rsiOn && h`<g>
         <line x1="14" x2=${pw} y1=${rsiTop} y2=${rsiTop} stroke="#27272a"/>
@@ -2248,7 +2477,7 @@ function Chart({ a, P, blitzList, customLevels, onAddLevel, drawMode, mode, sma,
         <line x1="14" x2=${pw} y1=${macdTop} y2=${macdTop} stroke="#27272a"/>
         <line x1="14" x2=${pw} y1=${macdTop + hMacd / 2} y2=${macdTop + hMacd / 2} stroke="#27272a" strokeDasharray="2 2"/>
         ${histSlice.map((val, i) => {
-          const barH = (Math.abs(val) / maxMacd) * (hMacd / 2 - 4);
+          const barH = Math.max(0, (Math.abs(val) / maxMacd) * (hMacd / 2 - 4));
           const barY = val >= 0 ? macdTop + hMacd / 2 - barH : macdTop + hMacd / 2;
           return h`<rect key=${'mh' + i} x=${x(i) - bw * 0.3} y=${barY} width=${bw * 0.6} height=${Math.max(1, barH)} fill=${val >= 0 ? '#10b98166' : '#f43f5e66'}/>`;
         })}
@@ -2294,8 +2523,9 @@ function BenchmarkChart({ eqHist, spyHist, t }) {
   const W = 780, H = 190;
   const all = [...eqHist, ...spyHist];
   const min = Math.min(...all) * 0.995, max = Math.max(...all) * 1.005 || 1.01;
+  const span = Math.max(1e-6, max - min);
   const x = i => 10 + (i / Math.max(1, eqHist.length - 1)) * (W - 20);
-  const y = v => H - 15 - ((v - min) / (max - min)) * (H - 30);
+  const y = v => H - 15 - ((v - min) / span) * (H - 30);
   const pEq = eqHist.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   const pSpy = spyHist.map((v, i) => `${x(i)},${y(v)}`).join(' ');
   const myRet = eqHist[eqHist.length - 1] - 1;
@@ -2321,16 +2551,16 @@ function Book({ a, onPickPrice, t }) {
   const K = 7;
   const as = [...Array(K)].map((_, i) => lv(a, 1, i)).reverse();
   const bs = [...Array(K)].map((_, i) => lv(a, -1, i));
-  const mx = Math.max(...as.map(x => x.sz), ...bs.map(x => x.sz));
-  const row = (x, c, bg) => h`<div key=${x.px} onClick=${() => onPickPrice && onPickPrice(x.px.toFixed(2))} class="relative flex justify-between px-1.5 py-0.5 cursor-pointer hover:bg-white/5 rounded"><div class="absolute inset-y-0 right-0 ${bg} rounded-r" style=${{ width: (x.sz / mx * 100) + '%' }}></div><span class="relative font-medium ${c}">${x.px.toFixed(2)}</span><span class="relative text-zinc-300">${x.sz < 10 ? x.sz.toFixed(2) : Math.round(x.sz)}</span></div>`;
+  const mx = Math.max(...as.map(x => x.sz), ...bs.map(x => x.sz), 1e-6);
+  const row = (x, c, bg, idx) => h`<div key=${idx + '_' + x.px} onClick=${() => onPickPrice && onPickPrice(x.px.toFixed(2))} class="relative flex justify-between px-1.5 py-0.5 cursor-pointer hover:bg-white/5 rounded"><div class="absolute inset-y-0 right-0 ${bg} rounded-r" style=${{ width: (x.sz / mx * 100) + '%' }}></div><span class="relative font-medium ${c}">${x.px.toFixed(2)}</span><span class="relative text-zinc-300">${x.sz < 10 ? x.sz.toFixed(2) : Math.round(x.sz)}</span></div>`;
   return h`<div class="text-[11px] space-y-0.5">
     <div class="flex justify-between px-1.5 text-[10px] text-zinc-500 uppercase"><span>${t.priceCol}</span><span>${t.volCol}</span></div>
-    ${as.map(x => row(x, 'text-rose-400', 'bg-rose-500/15'))}
+    ${as.map((x, i) => row(x, 'text-rose-400', 'bg-rose-500/15', 'a' + i))}
     <div class="my-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-800 flex justify-between items-center font-bold ${cl(a.p - a.d0)}">
       <span>${usd(a.p)}</span>
       <span class="text-[10px] text-zinc-500 font-normal">Spread ${((as[K - 1].px - bs[0].px) / a.p * 100).toFixed(2)}%</span>
     </div>
-    ${bs.map(x => row(x, 'text-emerald-400', 'bg-emerald-500/15'))}
+    ${bs.map((x, i) => row(x, 'text-emerald-400', 'bg-emerald-500/15', 'b' + i))}
   </div>`;
 }
 
@@ -2338,6 +2568,8 @@ const NewsCard = ({ w, g, full, featured = false, onSelectAsset, onOpenArticle, 
   const headline = lang === 'en' ? (w.h_en || w.h) : w.h;
   const body = lang === 'en' ? (w.b_en || w.b) : w.b;
   const category = lang === 'en' ? (w.cat_en || w.cat || w.tag) : (w.cat || w.tag);
+  const leadCompanies = Object.entries(w.sg).slice(0, 3).map(([s]) => g.a[s]).filter(Boolean);
+
   return h`
   <article onClick=${() => onOpenArticle && onOpenArticle(w)} class="p-3 border-b border-zinc-800/80 hover:bg-zinc-900/90 transition cursor-pointer group ${featured ? 'bg-gradient-to-b from-zinc-900/95 to-[#0a0a0c] border-l-2 border-l-white' : ''}">
     <div class="flex justify-between items-center text-[10px] text-zinc-400 mb-1.5 gap-2">
@@ -2350,6 +2582,18 @@ const NewsCard = ({ w, g, full, featured = false, onSelectAsset, onOpenArticle, 
       </div>
       <span class="px-1.5 py-0.5 rounded font-bold shrink-0 ${w.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : w.tag === 'EARNINGS' ? 'bg-zinc-200/15 text-zinc-200 border border-zinc-600' : 'bg-zinc-800 text-zinc-300'}">${category}</span>
     </div>
+
+    ${leadCompanies.length > 0 && h`
+      <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+        ${leadCompanies.map(comp => h`
+          <span key=${comp.sym} class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[9.5px] text-zinc-200 font-bold">
+            <${AssetLogo} sym=${comp.sym} size=${13}/>
+            <span>${comp.name}</span>
+            <span class="text-zinc-500">(${comp.sym})</span>
+          </span>
+        `)}
+      </div>
+    `}
 
     <div class="font-bold text-zinc-100 group-hover:text-white transition ${featured ? 'text-[13.5px]' : full ? 'text-sm' : 'text-[12px]'} leading-snug mb-1">${headline}</div>
     <p class="text-zinc-400 text-[11px] leading-relaxed mb-2">${body}</p>
@@ -2383,6 +2627,7 @@ function NewsPortalModal({ open, onClose, nl, g, nf, setNf, newsQuery, setNewsQu
   const lead = nl[0];
   const secondary = nl.slice(1, 5);
   const wire = nl.slice(5);
+  const leadCompanies = lead ? Object.entries(lead.sg).slice(0, 4).map(([s]) => g.a[s]).filter(Boolean) : [];
 
   return h`
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-5" onClick=${onClose}>
@@ -2422,6 +2667,17 @@ function NewsPortalModal({ open, onClose, nl, g, nf, setNf, newsQuery, setNewsQu
                     </div>
                     <span class="px-2 py-0.5 rounded font-black ${lead.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : 'bg-zinc-200 text-black'}">${lang === 'en' ? (lead.cat_en || lead.cat) : (lead.cat || lead.tag)}</span>
                   </div>
+                  ${leadCompanies.length > 0 && h`
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      ${leadCompanies.map(comp => h`
+                        <span key=${comp.sym} class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#060607] border border-zinc-700 text-[10.5px] text-white font-bold">
+                          <${AssetLogo} sym=${comp.sym} size=${15}/>
+                          <span>${comp.name}</span>
+                          <span class="text-zinc-400">(${comp.sym})</span>
+                        </span>
+                      `)}
+                    </div>
+                  `}
                   <h2 class="text-lg sm:text-xl font-black text-white leading-tight">${lang === 'en' ? (lead.h_en || lead.h) : lead.h}</h2>
                   <p class="text-xs text-zinc-300 leading-relaxed">${lang === 'en' ? (lead.b_en || lead.b) : lead.b}</p>
                   <p class="text-[11px] text-zinc-400 leading-relaxed border-l-2 border-zinc-600 pl-2.5">${lang === 'en' ? (lead.w_en || lead.w) : lead.w}</p>
@@ -2477,6 +2733,7 @@ function ArticleReaderModal({ item, g, onClose, onSelectAsset, onSelectArticle, 
   const headline = lang === 'en' ? (item.h_en || item.h) : item.h;
   const whyText = lang === 'en' ? (item.w_en || item.w) : item.w;
   const category = lang === 'en' ? (item.cat_en || item.cat || item.tag) : (item.cat || item.tag);
+  const headerCompanies = Object.entries(item.sg).slice(0, 4).map(([s]) => g.a[s]).filter(Boolean);
 
   return h`<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4" onClick=${onClose}>
     <div class="rounded-md border border-zinc-700 bg-[#0c0c0e] flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden shadow-2xl" onClick=${e => e.stopPropagation()}>
@@ -2493,6 +2750,17 @@ function ArticleReaderModal({ item, g, onClose, onSelectAsset, onSelectArticle, 
 
       <div class="overflow-y-auto p-6 space-y-5">
         <div>
+          ${headerCompanies.length > 0 && h`
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              ${headerCompanies.map(comp => h`
+                <button key=${comp.sym} onClick=${() => { onSelectAsset(comp.sym); onClose(); }} class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs text-white font-bold transition">
+                  <${AssetLogo} sym=${comp.sym} size=${16}/>
+                  <span>${comp.name}</span>
+                  <span class="text-zinc-400">(${comp.sym})</span>
+                </button>
+              `)}
+            </div>
+          `}
           <h1 class="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">${headline}</h1>
           <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-zinc-400 border-b border-zinc-800 pb-3">
             <span class="font-semibold text-zinc-200">${item.author || 'Institutional Desk'}</span>
@@ -2578,7 +2846,7 @@ function ArticleReaderModal({ item, g, onClose, onSelectAsset, onSelectArticle, 
 }
 
 function App() {
-  const [, fr] = useReducer(x => x + 1, 0);
+  const [rev, fr] = useReducer(x => x + 1, 0);
   const G = useRef(null);
   if (!G.current) {
     const saved = loadGame();
@@ -2589,7 +2857,15 @@ function App() {
   const [lang, setLang] = useState('es');
   const t = I18N[lang];
 
-  const [sp, setSp] = useState(1);
+  const [profile, setProfile] = useState(() => {
+    try {
+      const savedProf = localStorage.getItem(PROFILE_KEY);
+      if (savedProf) return { ...DEFAULT_PROFILE, ...JSON.parse(savedProf) };
+    } catch (e) {}
+    return DEFAULT_PROFILE;
+  });
+
+  const [sp, setSp] = useState(() => profile.defaultSpeed ?? 1);
   const [sel, setSel] = useState('NVDA');
   const [srch, setSrch] = useState('');
   const [sf, setSf] = useState('all');
@@ -2598,19 +2874,12 @@ function App() {
   const [capModalOpen, setCapModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [activeArticle, setActiveArticle] = useState(null);
-  const [cap, setCap] = useState(g.k0 || 1e8);
-  const [profile, setProfile] = useState(() => {
-    try {
-      const savedProf = localStorage.getItem('sim_market_profile_v1');
-      if (savedProf) return JSON.parse(savedProf);
-    } catch (e) {}
-    return { name: '', fund: '', initials: 'SP', style: 'octagon', customLogo: null };
-  });
 
   const saveProfile = (nextProf) => {
     setProfile(nextProf);
+    if (typeof nextProf.defaultSpeed === 'number') setSp(nextProf.defaultSpeed);
     try {
-      localStorage.setItem('sim_market_profile_v1', JSON.stringify(nextProf));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(nextProf));
     } catch (e) {}
     setMsg(lang === 'en' ? 'Institutional profile updated' : 'Perfil institucional actualizado');
   };
@@ -2647,8 +2916,7 @@ function App() {
   const [newsQuery, setNewsQuery] = useState('');
   const [tab, setTab] = useState('p');
   const [timer, setTimer] = useState(180);
-  const [breaking, setBreaking] = useState(null);
-  const [breakingRem, setBreakingRem] = useState(0);
+  const [breaking, setBreaking] = useState(() => g.N[0] || null);
   const searchInputRef = useRef(null);
 
   const selectAsset = useCallback((sym) => {
@@ -2668,34 +2936,28 @@ function App() {
   useEffect(() => {
     g.onBreaking = (item) => {
       setBreaking(item);
-      setBreakingRem(45);
+      setTimer(180);
       fr();
     };
+    return () => { g.onBreaking = null; };
   }, [g]);
 
   useEffect(() => {
     let secCounter = 0;
     const id = setInterval(() => {
-      tickBlitzSecond(g);
+      const curG = G.current;
+      tickBlitzSecond(curG);
       secCounter++;
-      if (secCounter % 10 === 0) saveGame(g);
-
-      setBreakingRem(rem => {
-        if (rem <= 1) {
-          setBreaking(null);
-          return 0;
-        }
-        return rem - 1;
-      });
+      if (secCounter % 10 === 0) saveGame(curG);
 
       setTimer(tmr => {
-        if (tmr === 45 && g.upgrades?.radar && !g.rumor) {
+        if (tmr === 45 && curG.upgrades?.radar && !curG.rumor) {
           const nextT = pickNextNews();
-          g.rumor = { template: nextT, headline: nextT.h, headline_en: nextT.h_en, syms: nextT.sg.map(x => x[0]).join(', ') };
+          curG.rumor = { template: nextT, headline: nextT.h, headline_en: nextT.h_en, syms: nextT.sg.map(x => x[0]).join(', ') };
         }
         if (tmr <= 1) {
-          if (Math.random() < 0.25) specialEvent(g);
-          else fire(g);
+          if (Math.random() < 0.28) specialEvent(curG);
+          else fire(curG);
           fr();
           return 180;
         }
@@ -2704,7 +2966,7 @@ function App() {
       fr();
     }, 1000);
     return () => clearInterval(id);
-  }, [g]);
+  }, []);
 
   useEffect(() => {
     if (!sp) return;
@@ -2724,7 +2986,7 @@ function App() {
         setProfileModalOpen(false);
         setBreaking(null);
         setDrawMode(false);
-      } else if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+      } else if (e.code === 'Space' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         e.preventDefault();
         setSp(s => (s === 0 ? 1 : 0));
       }
@@ -2735,7 +2997,7 @@ function App() {
 
   const a = g.a[sel];
   const P = g.P[sel] || { q: 0, avg: 0, margin: 0, lev: 1, div: 0, rl: 0, sl: 0, tp: 0 };
-  const n = Math.max(0, Math.min(1e9, Math.floor((+q || 0) * 1e4) / 1e4));
+  const n = Math.max(0, Math.min(1e12, Math.floor((+q || 0) * 1e4) / 1e4));
   const E = eq(g);
   const c0 = a.p / a.d0 - 1;
   const maxLevAllowed = getMaxLev(g);
@@ -2743,9 +3005,9 @@ function App() {
   const nb = byUsd ? uf(a, 'buy', +q || 0, lev, g) : n;
   const ns = byUsd ? uf(a, 'sell', +q || 0, lev, g) : n;
 
-  const pos = useMemo(() => Object.entries(g.P).filter(([, p]) => p.q !== 0), [g.P, g.tk, g.d, g.stats.trades]);
-  const totalMargin = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.margin, 0), [g.P, g.tk, g.stats.trades]);
-  const totalRealized = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.rl, 0), [g.P, g.tk, g.stats.trades]);
+  const pos = useMemo(() => Object.entries(g.P).filter(([, p]) => p.q !== 0), [g.P, rev]);
+  const totalMargin = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.margin, 0), [g.P, rev]);
+  const totalRealized = useMemo(() => Object.values(g.P).reduce((s, p) => s + p.rl, 0), [g.P, rev]);
 
   const unlockedCount = Object.keys(g.unlocked).length;
   const activeBlitzForSel = (g.B || []).filter(b => b.sym === sel);
@@ -2815,28 +3077,28 @@ function App() {
 
   const applyCapitalChange = (rawAmount, applyMode) => {
     const newAmount = Math.max(100, parseCapitalInput(rawAmount));
-    setCap(newAmount);
     if (applyMode === 'new') {
       localStorage.removeItem(SAVE_KEY);
       G.current = mkGame(newAmount);
       G.current.onBreaking = (item) => {
         setBreaking(item);
-        setBreakingRem(45);
+        setTimer(180);
         fr();
       };
       saveGame(G.current);
-      setSp(1);
+      setSp(profile.defaultSpeed ?? 1);
       setTimer(180);
-      setBreaking(null);
-      setBreakingRem(0);
+      setBreaking(G.current.N[0] || null);
       setActiveArticle(null);
       setMsg((lang === 'en' ? 'New session started with ' : 'Nueva partida iniciada con capital de ') + fmtBillion(newAmount));
     } else {
+      const diff = newAmount - g.cash;
       g.cash = newAmount;
-      g.k0 = Math.max(100, eq(g));
+      g.k0 = Math.max(100, g.k0 + diff);
+      const scaleTarget = Math.max(g.k0, newAmount);
       g.A.forEach((asset, idx) => {
         const baseLiq = AS[idx]?.[5] || 5000;
-        asset.liq = baseLiq * Math.max(1, newAmount / 1e6);
+        asset.liq = scaleAssetLiq(baseLiq, scaleTarget);
       });
       saveGame(g);
       setMsg((lang === 'en' ? 'Available cash updated to ' : 'Efectivo disponible actualizado a ') + fmtBillion(newAmount));
@@ -2845,7 +3107,51 @@ function App() {
   };
 
   const rst = () => {
-    applyCapitalChange(cap, 'new');
+    const defaultCap = 1e8;
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(PROFILE_KEY);
+    setProfile(DEFAULT_PROFILE);
+    G.current = mkGame(defaultCap);
+    G.current.onBreaking = (item) => {
+      setBreaking(item);
+      setTimer(180);
+      fr();
+    };
+    saveGame(G.current);
+    setSel('NVDA');
+    setSrch('');
+    setSf('all');
+    setSortBy('cap');
+    setNm(false);
+    setCapModalOpen(false);
+    setProfileModalOpen(false);
+    setActiveArticle(null);
+    setTradeMode('actions');
+    setBlitzSec(30);
+    setBlitzStake('1000');
+    setOptType('CALL');
+    setOptStrike('');
+    setOptDays(3);
+    setOptContracts('5');
+    setByUsd(false);
+    setOrderType('market');
+    setLimitPx('');
+    setLev(1);
+    setDrawMode(false);
+    setQ('10');
+    setSl('');
+    setTp('');
+    setBankAmt('500000');
+    setAlertPx('');
+    setBillSearch('');
+    setNf('all');
+    setNewsQuery('');
+    setTab('p');
+    setSp(DEFAULT_PROFILE.defaultSpeed);
+    setTimer(180);
+    setBreaking(G.current.N[0] || null);
+    setMsg(lang === 'en' ? 'Terminal completely reset to initial state' : 'Terminal reiniciada por completo al estado inicial');
+    fr();
   };
 
   const exportSave = () => {
@@ -2862,10 +3168,11 @@ function App() {
 
   const displayManagerName = profile.name?.trim() ? `${profile.name.trim()} (${lang === 'en' ? 'YOU' : 'TÚ'})` : t.youManager;
   const displayFundName = profile.fund?.trim() ? profile.fund.trim() : t.yourFund;
+  const displayCountry = profile.country || '🇨🇴 Colombia';
 
   const billionairesRanking = useMemo(() => {
     const userItem = {
-      id: 'user', rank: 0, name: displayManagerName, country: displayFundName,
+      id: 'user', rank: 0, name: displayManagerName, country: displayCountry,
       val: E, chg: E - g.k0, ret: E / g.k0 - 1, isUser: true, mainSym: sel
     };
     const list = g.billionaires.map(b => {
@@ -2877,745 +3184,694 @@ function App() {
         holdings: b.holdings
       };
     });
-    const combined = [userItem, ...list].sort((x, y) => y.val - x.val);
+    const combined = [...list, userItem].sort((x, y) => y.val - x.val);
     combined.forEach((item, idx) => item.rank = idx + 1);
     return combined;
-  }, [E, g.k0, g.billionaires, g.tk, g.d, sel, displayManagerName, displayFundName]);
+  }, [g.billionaires, E, g.k0, rev, sel, displayManagerName, displayCountry]);
 
-  const userRank = billionairesRanking.find(x => x.isUser)?.rank || 101;
-  const filteredBillionaires = useMemo(() => billionairesRanking.filter(b =>
-    b.isUser || (b.name + b.country + (b.holdings?.map(x => x.sym).join(' ') || '')).toLowerCase().includes(billSearch.trim().toLowerCase())
-  ), [billionairesRanking, billSearch]);
+  const userRankObj = billionairesRanking.find(x => x.isUser) || { rank: 101 };
+
+  const filteredBillionaires = useMemo(() => {
+    const qStr = billSearch.trim().toLowerCase();
+    if (!qStr) return billionairesRanking;
+    return billionairesRanking.filter(b =>
+      b.isUser ||
+      b.name.toLowerCase().includes(qStr) ||
+      b.country.toLowerCase().includes(qStr) ||
+      (b.holdings && b.holdings.some(hItem => hItem.sym.toLowerCase().includes(qStr)))
+    );
+  }, [billionairesRanking, billSearch]);
+
+  const al = useMemo(() => g.A
+    .filter(x => {
+      if (sf === 'fav') return g.favs.includes(x.sym);
+      if (sf !== 'all' && x.sec !== sf) return false;
+      const qStr = srch.trim().toLowerCase();
+      return !qStr || x.sym.toLowerCase().includes(qStr) || x.name.toLowerCase().includes(qStr);
+    })
+    .sort((x, y) => sortBy === 'cap' ? (y.p * y.sh) - (x.p * x.sh) : sortBy === 'chg' ? (y.p / y.d0) - (x.p / x.d0) : y.p - x.p), [g.A, sf, srch, sortBy, rev]);
 
   const nl = useMemo(() => {
-    const qLower = newsQuery.trim().toLowerCase();
+    const qStr = newsQuery.trim().toLowerCase();
     return g.N.filter(w => {
-      const matchSec = nf === 'all' || w.sy.some(s => SEC[nf]?.includes(s));
-      if (!matchSec) return false;
-      if (!qLower) return true;
-      return (w.h + ' ' + (w.h_en || '') + ' ' + w.b + ' ' + (w.b_en || '') + ' ' + (w.cat || '') + ' ' + w.sy.join(' ')).toLowerCase().includes(qLower);
+      const catMatch = nf === 'all' || w.sy.some(s => (SEC[nf] || []).includes(s));
+      const textMatch = !qStr ||
+        w.h.toLowerCase().includes(qStr) ||
+        (w.h_en && w.h_en.toLowerCase().includes(qStr)) ||
+        w.b.toLowerCase().includes(qStr) ||
+        w.sy.some(s => s.toLowerCase().includes(qStr));
+      return catMatch && textMatch;
     });
-  }, [g.N, g.id, nf, newsQuery]);
+  }, [g.N, nf, newsQuery, rev]);
 
-  const fc = ['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setNf(k)} class="px-2 py-0.5 rounded text-[10px] font-medium transition ${nf === k ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'}">${k === 'all' ? t.allFem : t.sectors[k]}</button>`);
+  const uPnl = P.q > 0 ? (a.p - P.avg) * P.q : P.q < 0 ? (P.avg - a.p) * Math.abs(P.q) : 0;
+  const estSL = +sl > 0 && P.q !== 0 ? (P.q > 0 ? (+sl - P.avg) * P.q : (P.avg - +sl) * Math.abs(P.q)) : null;
+  const estTP = +tp > 0 && P.q !== 0 ? (P.q > 0 ? (+tp - P.avg) * P.q : (P.avg - +tp) * Math.abs(P.q)) : null;
+  const rrRatio = (estSL !== null && estTP !== null && estSL < 0 && estTP > 0) ? (estTP / Math.abs(estSL)).toFixed(2) : null;
 
-  const al = useMemo(() => {
-    return g.A
-      .filter(x => {
-        const matchSec = sf === 'all' ? true : sf === 'favs' ? g.favs.includes(x.sym) : x.sec === sf;
-        return matchSec && (x.sym + x.name).toLowerCase().includes(srch.trim().toLowerCase());
-      })
-      .sort((x, y) => {
-        if (sortBy === 'cap') return (y.p * y.sh) - (x.p * x.sh);
-        if (sortBy === 'chg') return (y.p / y.d0 - 1) - (x.p / x.d0 - 1);
-        return y.p - x.p;
-      });
-  }, [g.A, sf, srch, sortBy, g.tk, g.d, g.favs]);
-
-  const riskReward = useMemo(() => {
-    const slVal = +sl, tpVal = +tp;
-    if (!(slVal > 0) || !(tpVal > 0)) return null;
-    const risk = Math.abs(a.p - slVal);
-    const reward = Math.abs(tpVal - a.p);
-    if (risk === 0) return null;
-    return (reward / risk).toFixed(2);
-  }, [a.p, sl, tp]);
-
-  const th = (...cols) => h`<tr class="text-[10px] uppercase tracking-wider text-zinc-500 bg-[#060607]">${cols.map(x => h`<th key=${x}>${x}</th>`)}</tr>`;
-  const curPosPnl = P.q > 0 ? (a.p - P.avg) * P.q : P.q < 0 ? (P.avg - a.p) * Math.abs(P.q) : 0;
+  const activeStrike = +optStrike || Math.round(a.p);
+  const optPremPerShare = calcOptionPrice(a, optType, activeStrike, optDays);
+  const optTotalCost = optPremPerShare * 100 * Math.max(1, Math.floor(+optContracts || 1));
 
   return h`
-  <div class="min-h-screen text-[12px] flex flex-col">
-    <header class="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-zinc-800/90 bg-[#060607] sticky top-0 z-30">
-      <div class="flex items-center mr-1 select-none">
-        <svg viewBox="0 0 220 44" class="h-9 w-auto" fill="none">
-          <rect width="220" height="44" rx="4" fill="#060607"/>
-          <g transform="translate(4, 6)">
-            <polygon points="8,1 24,1 31,8 31,24 24,31 8,31 1,24 1,8" fill="#060607" stroke="#ffffff" strokeWidth="1.6"/>
-            <rect x="8.5" y="17" width="3" height="7" rx="0.5" fill="#71717a"/>
-            <rect x="14.5" y="12" width="3" height="12" rx="0.5" fill="#d4d4d8"/>
-            <rect x="20.5" y="7" width="3" height="17" rx="0.5" fill="#ffffff"/>
-          </g>
-          <text x="44" y="21" fill="#ffffff" fontSize="14" fontWeight="900" letterSpacing="1.2">
-            SIM<tspan fill="#a1a1aa">·</tspan>MARKET
-          </text>
-          <text x="44" y="33" fill="#71717a" fontSize="8.5" fontWeight="700" letterSpacing="2.4">
-            INSTITUTIONAL
-          </text>
-        </svg>
-      </div>
+  <div class="min-h-screen flex flex-col bg-[#060607] text-zinc-200 selection:bg-white/20">
 
-      <div class="hidden xl:flex items-center gap-1 bg-[#0d0d0f] p-1 rounded border border-zinc-800">
-        ${g.openTabs.map(sym => {
-          const item = g.a[sym];
-          if (!item) return null;
-          const chg = item.p / item.d0 - 1;
-          const active = sym === sel;
-          return h`<button key=${sym} onClick=${() => setSel(sym)} class="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] transition ${active ? 'bg-zinc-800 text-white font-bold border border-zinc-400' : 'text-zinc-400 hover:text-zinc-200'}">
-            <${AssetLogo} sym=${sym} size=${14}/>
-            <span>${sym}</span>
-            <span class="text-[9.5px] ${cl(chg)}">${pc(chg)}</span>
-          </button>`;
-        })}
-      </div>
-
-      <div class="px-2 py-1 rounded bg-[#0d0d0f] border border-zinc-800 font-semibold text-zinc-200 text-[11px]">${tm(g.d, g.tk, lang)}</div>
-      <div class="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 font-semibold text-[11px]">
-        <${I} d=${IC.bell} s=${13}/>
-        <span>${Math.floor(timer / 60)}:${String(timer % 60).padStart(2, '0')}</span>
-        <button onClick=${() => triggerManualNews(false)} class="px-1.5 py-0.2 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[9px] uppercase border border-zinc-700">${t.news}</button>
-      </div>
-
-      <div class="flex items-center gap-1">
-        ${B(sp === 0, () => setSp(0), IC.pause, '')}
-        ${B(sp === 1, () => setSp(1), IC.play, '1x')}
-        ${B(sp === 3, () => setSp(3), IC.fast, '3x')}
-        ${B(sp === 10, () => setSp(10), IC.zap, '10x')}
-        ${B(false, skip, IC.skip, '+1D')}
-        ${B(false, () => setCapModalOpen(true), IC.edit, `${t.capital}: ${fmtBillion(cap)}`)}
-        ${B(false, exportSave, IC.save, t.save)}
-        ${B(false, rst, IC.reset, '')}
-      </div>
-
-      <button onClick=${() => setLang(l => l === 'es' ? 'en' : 'es')} title="Switch Language / Cambiar Idioma" class="flex items-center gap-1 px-2.5 py-1 rounded border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-[11px] font-black text-white transition">
-        <span class=${lang === 'es' ? 'text-white' : 'text-zinc-500'}>ES</span>
-        <span class="text-zinc-600">/</span>
-        <span class=${lang === 'en' ? 'text-white' : 'text-zinc-500'}>EN</span>
-      </button>
-
-      <button onClick=${() => setProfileModalOpen(true)} title=${t.profileModalTitle} class="ml-auto flex items-center gap-2 px-2.5 py-1 rounded border border-zinc-800 hover:border-zinc-500 bg-[#0d0d0f] hover:bg-zinc-900 transition text-left">
-        <${ProfileAvatar} profile=${profile} size=${24}/>
-        <div class="hidden sm:block leading-tight">
-          <div class="text-[11px] font-bold text-white max-w-[125px] truncate">${profile.name?.trim() || (lang === 'en' ? 'Set Profile' : 'Configurar Perfil')}</div>
-          <div class="text-[9px] text-zinc-400 max-w-[125px] truncate">${profile.fund?.trim() || t.profileBtn} ✎</div>
+    <header class="sticky top-0 z-30 border-b border-zinc-800/90 bg-[#070709]/95 backdrop-blur px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+      <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2">
+          <svg width="26" height="26" viewBox="0 0 36 36" class="shrink-0">
+            <polygon points="10,2 26,2 34,10 34,26 26,34 10,34 2,26 2,10" fill="#050506" stroke="#ffffff" strokeWidth="1.8"/>
+            <polygon points="12,5 24,5 31,12 31,24 24,31 12,31 5,24 5,12" fill="none" stroke="#3f3f46" strokeWidth="0.9"/>
+            <rect x="11" y="19" width="3" height="8" rx="0.5" fill="#71717a"/>
+            <rect x="16.5" y="14" width="3" height="13" rx="0.5" fill="#d4d4d8"/>
+            <rect x="22" y="9" width="3" height="18" rx="0.5" fill="#ffffff"/>
+          </svg>
+          <div>
+            <div class="flex items-center gap-1.5 leading-none">
+              <b class="text-white tracking-wider text-sm">SIM·MARKET</b>
+              <span class="px-1.5 py-0.5 rounded bg-zinc-200/15 text-zinc-200 border border-zinc-600 text-[9px] font-bold">INSTITUTIONAL</span>
+            </div>
+            <span class="text-[10px] text-zinc-500">${tm(g.d, g.tk, lang)}</span>
+          </div>
         </div>
-      </button>
 
-      <div class="flex flex-wrap items-center gap-3 bg-[#0d0d0f] px-3 py-1 rounded border border-zinc-800">
-        <div><span class="text-[9px] text-zinc-500 block">${t.equity}</span><b class="text-white">${fmtBillion(E)}</b></div>
-        <div onClick=${() => setCapModalOpen(true)} class="border-l border-zinc-800 pl-3 cursor-pointer hover:opacity-80 transition">
-          <span class="text-[9px] text-zinc-500 block">${t.available} ✎</span>
-          <b class="text-emerald-300">${fmtBillion(g.cash)}</b>
+        <button onClick=${() => setProfileModalOpen(true)} title=${t.profileModalTitle} class="hidden sm:flex items-center gap-2 px-2 py-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-500 transition text-left">
+          <${ProfileAvatar} profile=${profile} size=${22}/>
+          <div class="leading-tight max-w-[130px]">
+            <div class="text-[10px] font-black text-white truncate">${profile.name || 'Username'}</div>
+            <div class="text-[8.5px] text-zinc-400 truncate">${profile.fund || 'Na'} · ${profile.role || 'Partner'}</div>
+          </div>
+          <${I} d=${IC.edit} s=${11}/>
+        </button>
+
+        <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded border border-zinc-800">
+          ${[[0, IC.pause, ''], [1, IC.play, '1x'], [3, IC.fast, '3x'], [10, IC.zap, '10x']].map(([v, ic, lb]) => h`<span key=${v}>${B(sp === v, () => setSp(v), ic, lb)}</span>`)}
+          ${B(0, skip, IC.skip, '+1D')}
+          ${B(0, () => triggerManualNews(false), IC.news, t.news)}
+          ${B(0, exportSave, IC.save, t.save)}
+          ${B(0, () => setCapModalOpen(true), IC.bank, t.capital)}
+          ${B(0, () => setProfileModalOpen(true), IC.edit, t.profileBtn)}
+          ${B(0, rst, IC.reset, '')}
         </div>
-        <div class="border-l border-zinc-800 pl-3"><span class="text-[9px] text-zinc-500 block">${t.forbesRank}</span><b class="text-zinc-100">#${userRank}</b></div>
-        <div class="border-l border-zinc-800 pl-3"><span class="text-[9px] text-zinc-500 block">${t.returnPct}</span><b class=${cl(E - g.k0)}>${pc(E / g.k0 - 1)}</b></div>
+
+        <div class="flex items-center bg-zinc-900 p-0.5 rounded border border-zinc-800">
+          <button onClick=${() => setLang('es')} class="px-1.5 py-0.5 rounded text-[10px] font-black transition ${lang === 'es' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}">ES</button>
+          <button onClick=${() => setLang('en')} class="px-1.5 py-0.5 rounded text-[10px] font-black transition ${lang === 'en' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}">EN</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs">
+        <div class="text-right"><div class="text-[9px] text-zinc-500 uppercase">${t.equity}</div><b class="text-white text-sm">${fmtBillion(E)}</b></div>
+        <div class="text-right cursor-pointer hover:opacity-80" onClick=${() => setCapModalOpen(true)} title="Clic para editar capital"><div class="text-[9px] text-zinc-500 uppercase">${t.available} ✎</div><b class="text-zinc-200">${fmtBillion(g.cash)}</b></div>
+        <div class="text-right cursor-pointer hover:opacity-80" onClick=${() => setTab('forbes')}><div class="text-[9px] text-zinc-500 uppercase">${t.forbesRank}</div><b class=${userRankObj.rank <= 100 ? 'text-white' : 'text-zinc-400'}>#${userRankObj.rank}</b></div>
+        <div class="text-right hidden sm:block"><div class="text-[9px] text-zinc-500 uppercase">${t.returnPct}</div><b class=${cl(E - g.k0)}>${pc(E / g.k0 - 1)}</b></div>
       </div>
     </header>
 
+    <div class="overflow-hidden border-b border-zinc-800/80 bg-[#09090b] py-1 text-[11px]">
+      <div class="tk flex w-max gap-5 px-3">
+        ${[0, 1].map(k => h`<div key=${k} class="flex gap-5">
+          ${g.A.map(x => h`<span key=${x.sym} onClick=${() => selectAsset(x.sym)} class="flex items-center gap-1.5 cursor-pointer hover:text-white transition">
+            <${AssetLogo} sym=${x.sym} size=${14}/>
+            <b class="text-zinc-300">${x.sym}</b>
+            <span class="text-zinc-400">${usd(x.p)}</span>
+            <span class=${cl(x.p - x.d0)}>${pc(x.p / x.d0 - 1)}</span>
+          </span>`)}
+        </div>`)}
+      </div>
+    </div>
+
     ${g.rumor && h`
-      <div class="mx-2 mt-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-600 flex items-center justify-between text-xs text-zinc-200">
-        <span>🕵️ <b>${t.radarIntercepted}</b> ${t.radarMoveIn} <b class="text-white">${g.rumor.syms}</b> — "${lang === 'en' ? (g.rumor.headline_en || g.rumor.headline) : g.rumor.headline}"</span>
-        <span class="text-[10px] font-bold uppercase text-zinc-300">${t.confirmIn} ${timer}s</span>
+      <div class="mx-2.5 mt-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-500 flex items-center justify-between text-xs text-zinc-200 shadow">
+        <div class="flex items-center gap-2 truncate">
+          <span class="px-1.5 py-0.5 rounded bg-white text-black font-black text-[9px] uppercase">RADAR</span>
+          <span><b>${t.radarIntercepted}</b> ${t.radarMoveIn} <b>${g.rumor.syms}</b> — “${lang === 'en' ? (g.rumor.headline_en || g.rumor.headline) : g.rumor.headline}”</span>
+        </div>
+        <span class="text-[10px] font-bold text-zinc-300 shrink-0 ml-2">${t.confirmIn} ${timer}s</span>
       </div>
     `}
 
     ${breaking && h`
-      <div onClick=${() => setActiveArticle(breaking)} class="mx-2 mt-2 p-3 rounded bg-[#0d0d0f] border-2 breaking-flash flex flex-col gap-2 shadow-2xl cursor-pointer hover:bg-zinc-900/95 transition relative overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-start gap-3 flex-1 min-w-0">
-            <div class="flex flex-col items-start gap-1 shrink-0">
-              <span class="px-2 py-0.5 rounded ${breaking.tag === 'CISNE NEGRO' ? 'bg-rose-600 text-white' : 'bg-zinc-100 text-zinc-950'} font-black text-[10px] tracking-wider uppercase">${lang === 'en' ? (breaking.cat_en || breaking.cat) : (breaking.cat || breaking.tag)}</span>
-              <div class="flex items-center gap-1 text-[10px] text-zinc-300 font-bold">
-                <${MediaLogo} outlet=${breaking.outlet} size=${13}/>
-                <span>${breaking.outlet?.name || 'Bloomberg'}</span>
-              </div>
-            </div>
-            <div class="min-w-0">
-              <div class="font-bold text-white text-sm leading-snug flex flex-wrap items-center gap-2">
-                <span>${lang === 'en' ? (breaking.h_en || breaking.h) : breaking.h}</span>
-                <span class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-600 text-[10px] text-zinc-200 font-bold">📖 ${t.readFullTimer} (${breakingRem}s)</span>
-              </div>
-              <div class="text-zinc-300 text-xs mt-1 leading-relaxed">${lang === 'en' ? (breaking.b_en || breaking.b) : breaking.b}</div>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-1.5 shrink-0" onClick=${e => e.stopPropagation()}>
-            ${Object.entries(breaking.sg).slice(0, 4).map(([s, v]) => g.a[s] && h`
-              <button key=${s} onClick=${() => selectAsset(s)} class="flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold border transition hover:scale-105 ${v > 0 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/20 border-rose-500/40 text-rose-300'}">
-                <${AssetLogo} sym=${s} size=${15}/>
-                <span>${s} ${v > 0 ? '▲' : '▼'}</span>
-              </button>
+      <div onClick=${() => setActiveArticle(breaking)} class="breaking-flash mx-2.5 mt-2 px-3 py-2 rounded-md border bg-zinc-900/95 cursor-pointer hover:bg-zinc-800/90 transition flex items-center justify-between gap-3 text-xs shadow-lg">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="px-1.5 py-0.5 rounded bg-white text-black font-black text-[9.5px] tracking-wider uppercase shrink-0">${lang === 'en' ? (breaking.cat_en || breaking.cat || breaking.tag) : (breaking.cat || breaking.tag)}</span>
+          <${MediaLogo} outlet=${breaking.outlet} size=${16}/>
+          <span class="text-[10.5px] font-bold text-zinc-400 shrink-0 hidden md:inline">${breaking.outlet?.name || 'Bloomberg'}:</span>
+          <b class="text-white truncate">${lang === 'en' ? (breaking.h_en || breaking.h) : breaking.h}</b>
+          <div class="hidden lg:flex items-center gap-1 shrink-0">
+            ${Object.entries(breaking.sg).slice(0, 3).map(([s, v]) => g.a[s] && h`
+              <span key=${s} onClick=${e => { e.stopPropagation(); selectAsset(s); }} class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${v > 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                <${AssetLogo} sym=${s} size=${13}/><span>${s}</span>
+              </span>
             `)}
-            <button onClick=${() => { setBreaking(null); setBreakingRem(0); }} class="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold">✕</button>
           </div>
         </div>
-        <div class="w-full h-1 bg-zinc-800 rounded overflow-hidden">
-          <div class="h-full bg-zinc-300 transition-all duration-1000" style=${{ width: `${(breakingRem / 45) * 100}%` }}></div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-[10px] font-bold text-zinc-300 underline hidden sm:inline">${t.readFullTimer} (${timer}s)</span>
+          <button onClick=${e => { e.stopPropagation(); setBreaking(null); }} class="text-zinc-400 hover:text-white px-1">✕</button>
         </div>
       </div>
     `}
 
-    <div class="overflow-hidden border-b border-zinc-800/90 bg-[#050506] py-1.5 text-[11px]">
-      <div class="tk flex w-max items-center">
-        ${[0, 1].map(k => g.A.map(x => {
-          const c = x.p / x.d0 - 1;
-          return h`<span key=${k + x.sym} onClick=${() => selectAsset(x.sym)} class="inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap pr-7 hover:text-white transition">
-            <${AssetLogo} sym=${x.sym} size=${15}/>
-            <b class="text-zinc-100">${x.sym}</b>
-            <span class="text-zinc-300">${usd(x.p)}</span>
-            <span class="text-[10px] text-zinc-500">[${fmtCap(x.p * x.sh)}]</span>
-            <span class=${cl(c)}>${c >= 0 ? '▲' : '▼'}${pc(c)}</span>
-          </span>`;
-        }))}
-      </div>
-    </div>
+    <div class="flex-1 flex flex-col md:flex-row">
+      <aside class="flex md:flex-col items-center justify-between md:justify-start gap-1.5 border-b md:border-b-0 md:border-r border-zinc-800 bg-[#08080a] p-1.5 md:w-14 shrink-0 overflow-x-auto">
+        <${SidebarButton} active=${tab === 'p'} onClick=${() => setTab('p')} icon=${IC.grid} label=${t.navPortfolio} title=${t.tabPortfolio} badge=${pos.length + g.OP.length}/>
+        <${SidebarButton} active=${tab === 'o'} onClick=${() => setTab('o')} icon=${IC.orders} label=${t.navOrders} title=${t.tabOrders} badge=${g.O.length}/>
+        <${SidebarButton} active=${tab === 'forbes'} onClick=${() => setTab('forbes')} icon=${IC.trophy} label=${t.navTop100} title=${t.forbesTitle}/>
+        <${SidebarButton} active=${tab === 'tycoon'} onClick=${() => setTab('tycoon')} icon=${IC.cpu} label=${t.navTycoon} title=${t.tabTycoon} badge=${unlockedCount}/>
+        <${SidebarButton} active=${tab === 'map'} onClick=${() => setTab('map')} icon=${IC.grid} label=${t.navMap} title=${t.tabHeatmap}/>
+        <${SidebarButton} active=${tab === 'b'} onClick=${() => setTab('b')} icon=${IC.bank} label=${t.navBank} title=${t.tabBank}/>
+        <${SidebarButton} active=${tab === 'spy'} onClick=${() => setTab('spy')} icon=${IC.trend} label=${t.navBenchmark} title=${t.tabSpy}/>
+        <${SidebarButton} active=${tab === 'h'} onClick=${() => setTab('h')} icon=${IC.history} label=${t.navHistory} title=${t.tabHistory}/>
+        <div class="hidden md:block w-8 border-t border-zinc-800 my-1"></div>
+        <${SidebarButton} active=${capModalOpen} onClick=${() => setCapModalOpen(true)} icon=${IC.bank} label=${t.navCapital} title=${t.capModalTitle}/>
+        <${SidebarButton} active=${nm} onClick=${() => setNm(true)} icon=${IC.news} label=${t.navPress} title=${t.portalTitle} badge=${g.N.length}/>
+      </aside>
 
-    <div class="flex flex-1 min-w-0">
-      <nav class="hidden sm:flex flex-col items-center gap-2 py-3 px-1.5 border-r border-zinc-800/90 bg-[#060607] w-[62px] shrink-0">
-        <${SidebarButton} active=${tab === 'p'} onClick=${() => setTab('p')} icon=${IC.save} label=${t.navPortfolio} title=${t.navPortfolio} badge=${pos.length + (g.OP || []).length}/>
-        <${SidebarButton} active=${tab === 'o'} onClick=${() => setTab('o')} icon=${IC.orders} label=${t.navOrders} title=${t.navOrders} badge=${g.O.length}/>
-        <${SidebarButton} active=${tab === 'b'} onClick=${() => setTab('b')} icon=${IC.trophy} label=${t.navTop100} title=${t.navTop100}/>
-        <${SidebarButton} active=${tab === 'tycoon'} onClick=${() => setTab('tycoon')} icon=${IC.cpu} label=${t.navTycoon} title=${t.navTycoon}/>
-        <${SidebarButton} active=${tab === 'h'} onClick=${() => setTab('h')} icon=${IC.grid} label=${t.navMap} title=${t.navMap}/>
-        <${SidebarButton} active=${tab === 'bank'} onClick=${() => setTab('bank')} icon=${IC.bank} label=${t.navBank} title=${t.navBank}/>
-        <${SidebarButton} active=${tab === 'c'} onClick=${() => setTab('c')} icon=${IC.trend} label=${t.navBenchmark} title=${t.navBenchmark}/>
-        <${SidebarButton} active=${tab === 't'} onClick=${() => setTab('t')} icon=${IC.history} label=${t.navHistory} title=${t.navHistory}/>
-        <div class="w-8 border-t border-zinc-800 my-0.5"></div>
-        <${SidebarButton} active=${capModalOpen} onClick=${() => setCapModalOpen(true)} icon=${IC.edit} label=${t.navCapital} title=${t.navCapital}/>
-        <${SidebarButton} active=${nm} onClick=${() => setNm(true)} icon=${IC.news} label=${t.navPress} title=${t.navPress} badge=${g.N.length}/>
-      </nav>
+      <div class="flex-1 grid gap-2.5 p-2.5 lg:grid-cols-[260px_1fr_320px] items-start">
 
-      <main class="grid gap-2.5 p-2.5 lg:grid-cols-[315px_minmax(0,1fr)_335px] flex-1 min-w-0 items-start">
-        <div class="space-y-2.5 min-w-0 flex flex-col lg:row-span-2">
-          <section class="${PN} flex flex-col">
-            <div class="space-y-2 border-b border-zinc-800 p-2.5">
-              <div class="flex justify-between items-center">
-                <b class="text-zinc-100 text-xs uppercase tracking-wider">${t.markets} (${al.length})</b>
-                <select value=${sortBy} onChange=${e => setSortBy(e.target.value)} class="w-auto py-0.5 px-1.5 text-[10px] bg-zinc-900">
+        <div class="space-y-2.5">
+          <div class="${PN} overflow-hidden">
+            <div class="p-2 border-b border-zinc-800 space-y-1.5 bg-[#09090b]">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">${t.markets} (${al.length})</span>
+                <select value=${sortBy} onChange=${e => setSortBy(e.target.value)} class="w-auto py-0.5 px-1.5 text-[10px] bg-zinc-900 border-zinc-700 text-zinc-300">
                   <option value="cap">${t.sortCap}</option>
                   <option value="chg">${t.sortChg}</option>
                   <option value="price">${t.sortPrice}</option>
                 </select>
               </div>
-              <input ref=${searchInputRef} placeholder=${t.searchAssetPlaceholder} value=${srch} onInput=${e => setSrch(e.target.value)}/>
+              <input ref=${searchInputRef} placeholder=${t.searchAssetPlaceholder} value=${srch} onInput=${e => setSrch(e.target.value)} class="text-xs py-1"/>
               <div class="flex flex-wrap gap-1">
-                <button onClick=${() => setSf('favs')} class="rounded px-2 py-0.5 text-[10px] font-bold transition ${sf === 'favs' ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-white'}">${t.fav}</button>
-                ${['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setSf(k)} class="rounded px-2 py-0.5 text-[10px] font-medium transition ${sf === k ? 'bg-zinc-200/15 text-white border border-zinc-300' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200'}">${k === 'all' ? t.all : t.sectors[k]}</button>`)}
+                ${['fav', 'all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setSf(k)} class="px-1.5 py-0.5 rounded text-[10px] font-medium transition ${sf === k ? 'bg-white text-black font-bold' : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'}">${k === 'fav' ? t.fav : k === 'all' ? t.all : t.sectors[k].split(' ')[0]}</button>`)}
               </div>
             </div>
-
-            <div class="max-h-[34vh] overflow-y-auto divide-y divide-zinc-800/70">
+            <div class="max-h-[410px] overflow-y-auto divide-y divide-zinc-800/50">
               ${al.map(x => {
-                const c = x.p / x.d0 - 1;
-                const pq = g.P[x.sym]?.q || 0;
                 const isFav = g.favs.includes(x.sym);
-                return h`
-                <div key=${x.sym} onClick=${() => selectAsset(x.sym)} class="w-full flex justify-between items-center px-2.5 py-2 cursor-pointer transition ${x.sym === sel ? 'bg-zinc-900 border-l-2 border-white' : 'hover:bg-zinc-900/60'}">
-                  <div class="min-w-0 pr-2 flex items-center gap-2">
-                    <button onClick=${e => toggleFav(e, x.sym)} class="text-xs ${isFav ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'}">★</button>
+                const capStr = fmtCap(x.p * x.sh);
+                return h`<div key=${x.sym} onClick=${() => selectAsset(x.sym)} class="flex items-center justify-between px-2.5 py-1.5 cursor-pointer transition ${x.sym === sel ? 'bg-zinc-200/10 border-l-2 border-white' : 'hover:bg-zinc-900/90'}">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <button onClick=${e => toggleFav(e, x.sym)} class="text-xs ${isFav ? 'text-white' : 'text-zinc-700 hover:text-zinc-400'}">★</button>
                     <${AssetLogo} sym=${x.sym} size=${22}/>
                     <div class="min-w-0">
-                      <div class="flex items-center gap-1.5">
-                        <b class="text-zinc-100 text-xs">${x.sym}</b>
-                        ${pq > 0 && h`<span class="px-1 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">LONG</span>`}
-                        ${pq < 0 && h`<span class="px-1 rounded bg-rose-500/20 text-rose-300 text-[9px] font-bold">SHORT</span>`}
-                      </div>
-                      <div class="text-[10px] text-zinc-400 truncate">${x.name}</div>
-                      <div class="text-[10px] text-zinc-300 font-semibold">Cap: ${fmtCap(x.p * x.sh)}</div>
+                      <div class="flex items-center gap-1"><b class="text-white text-xs">${x.sym}</b>${g.P[x.sym]?.q !== 0 && g.P[x.sym] && h`<span class="w-1.5 h-1.5 rounded-full ${g.P[x.sym].q > 0 ? 'bg-emerald-400' : 'bg-rose-400'}"></span>`}</div>
+                      <div class="text-[9.5px] text-zinc-500 truncate max-w-[110px]">${x.name}</div>
                     </div>
                   </div>
-                  <div class="text-right shrink-0">
-                    <div class="font-bold text-zinc-100">${usd(x.p)}</div>
-                    <div class="text-[11px] font-semibold ${cl(c)}">${pc(c)}</div>
+                  <div class="text-right text-[11px] shrink-0">
+                    <div class="font-semibold text-zinc-100">${usd(x.p)}</div>
+                    <div class="flex items-center justify-end gap-1.5 text-[9.5px]">
+                      <span class="text-zinc-500">${capStr}</span>
+                      <span class=${cl(x.p - x.d0)}>${pc(x.p / x.d0 - 1)}</span>
+                    </div>
                   </div>
                 </div>`;
               })}
             </div>
-          </section>
-
-          <section class="${PN} flex-1 flex flex-col min-h-[340px]">
-            <div class="flex flex-wrap items-center gap-1.5 border-b border-zinc-800 p-2.5 bg-[#060607] rounded-t-md">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <b class="text-zinc-100 text-xs uppercase tracking-wider flex items-center gap-1"><${I} d=${IC.news} s=${13}/> ${t.agencyTitle} (${g.N.length})</b>
-              </div>
-              <button onClick=${() => setNm(true)} class="ml-auto rounded bg-zinc-200 text-zinc-950 px-2 py-0.5 text-[10px] font-black hover:bg-white transition">${t.fullPortal}</button>
-            </div>
-
-            <div class="p-2 border-b border-zinc-800 bg-[#09090b] space-y-1.5">
-              <input placeholder=${t.searchNewsPlaceholder} value=${newsQuery} onInput=${e => setNewsQuery(e.target.value)} class="py-1 text-[11px]"/>
-              <div class="flex flex-wrap gap-1">${fc}</div>
-            </div>
-
-            <div class="overflow-y-auto flex-1 max-h-[52vh]">
-              ${nl.length > 0 ? nl.slice(0, 18).map((w, idx) => h`
-                <${NewsCard} key=${w.id} w=${w} g=${g} full=${false} featured=${idx === 0} lang=${lang} t=${t} onSelectAsset=${s => selectAsset(s)} onOpenArticle=${art => setActiveArticle(art)}/>
-              `) : h`<p class="p-6 text-center text-zinc-500 text-xs">${t.noNewsFor} "${newsQuery}".</p>`}
-            </div>
-          </section>
-        </div>
-
-        <section class="${PN} min-w-0">
-          <div class="flex flex-wrap items-center gap-3 p-3 border-b border-zinc-800">
-            <div class="flex items-center gap-3">
-              <${AssetLogo} sym=${a.sym} size=${34}/>
-              <div>
-                <div class="flex items-center gap-2">
-                  <b class="text-base text-white tracking-tight">${a.sym}</b>
-                  <span class="text-zinc-400 text-xs">${a.name}</span>
-                  <span class="rounded bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-300">${t.sectors[a.sec]}</span>
-                </div>
-                <div class="flex items-center gap-3 mt-1">
-                  <span class="text-xl font-black ${cl(c0)}">${usd(a.p)}</span>
-                  <span class="px-1.5 py-0.5 rounded text-xs font-bold ${c0 >= 0 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}">${pc(c0)}</span>
-                  <span class="text-xs text-zinc-400 border-l border-zinc-800 pl-3">Cap: <b class="text-white text-sm">${fmtCap(a.p * a.sh)}</b></span>
-                </div>
-              </div>
-            </div>
-
-            <div class="ml-auto flex flex-wrap gap-1">
-              ${B(mode === 'c', () => setMode('c'), null, t.candles)}
-              ${B(mode === 'l', () => setMode('l'), null, t.area)}
-              ${B(sma, () => setSma(!sma), null, 'SMA')}
-              ${B(ema, () => setEma(!ema), null, 'EMA')}
-              ${B(bb, () => setBb(!bb), null, 'BB')}
-              ${B(rsiOn, () => setRsiOn(!rsiOn), null, 'RSI')}
-              ${B(macdOn, () => setMacdOn(!macdOn), null, 'MACD')}
-              ${B(drawMode, () => setDrawMode(!drawMode), null, drawMode ? t.clickChart : t.addLevel)}
-              ${customLevelsForSel.length > 0 && B(false, () => { g.levels[sel] = []; fr(); }, null, t.clearLevels)}
-            </div>
           </div>
 
-          <${Chart} a=${a} P=${P} t=${t} blitzList=${activeBlitzForSel} customLevels=${customLevelsForSel} onAddLevel=${px => { g.levels[sel] = [...(g.levels[sel] || []), px]; setDrawMode(false); setMsg((lang === 'en' ? 'Support/Resistance set at ' : 'Soporte/Resistencia fijado en ') + usd(px)); saveGame(g); fr(); }} drawMode=${drawMode} mode=${mode} sma=${sma} ema=${ema} bb=${bb} rsiOn=${rsiOn} macdOn=${macdOn} vol=${vol}/>
-        </section>
+          <div class="${PN} overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-[#09090b]">
+              <div class="flex items-center gap-2">
+                <b class="text-[11px] uppercase tracking-wider text-zinc-200">${t.agencyTitle}</b>
+                <span class="px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-700 text-[9.5px] text-zinc-300 font-bold">${timer}s</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onClick=${() => triggerManualNews(false)} title=${t.newDispatch} class="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-[10px] font-bold">+1</button>
+                <button onClick=${() => setNm(true)} class="text-[10px] text-zinc-200 hover:text-white underline font-bold">${t.fullPortal}</button>
+              </div>
+            </div>
+            <div class="p-2 border-b border-zinc-800/80 space-y-1.5 bg-[#08080a]">
+              <input placeholder=${t.searchNewsPlaceholder} value=${newsQuery} onInput=${e => setNewsQuery(e.target.value)} class="py-1 text-[10.5px]"/>
+              <div class="flex gap-1 overflow-x-auto pb-0.5">
+                ${['all', ...Object.keys(SEC)].map(k => h`<button key=${k} onClick=${() => setNf(k)} class="px-1.5 py-0.5 rounded text-[9.5px] shrink-0 ${nf === k ? 'bg-white text-black font-bold' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'}">${k === 'all' ? t.allFem : k}</button>`)}
+              </div>
+            </div>
+            <div class="max-h-[420px] overflow-y-auto">
+              ${nl.length ? nl.slice(0, 7).map((w, idx) => h`<${NewsCard} key=${w.id} w=${w} g=${g} full=${false} featured=${idx === 0} lang=${lang} t=${t} onSelectAsset=${selectAsset} onOpenArticle=${setActiveArticle}/>`) : h`<div class="p-4 text-center text-[11px] text-zinc-500">${t.noNewsFor} "${newsQuery}"</div>`}
+            </div>
+          </div>
+        </div>
 
-        <aside class="space-y-2.5 min-w-0">
-          <section class="${PN} p-3 space-y-2.5">
-            <div class="grid grid-cols-3 gap-1 p-1 rounded bg-[#060607] border border-zinc-800">
-              <button onClick=${() => setTradeMode('actions')} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'actions' ? 'bg-zinc-200/15 text-white border border-zinc-400' : 'text-zinc-400 hover:text-white'}">${t.tabActions}</button>
-              <button onClick=${() => { setTradeMode('options'); if (!optStrike) setOptStrike(String(Math.round(a.p))); }} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'options' ? 'bg-zinc-200/15 text-white border border-zinc-400' : 'text-zinc-400 hover:text-white'}">${t.tabOptions}</button>
-              <button onClick=${() => setTradeMode('blitz')} class="py-1.5 rounded text-[10.5px] font-bold transition ${tradeMode === 'blitz' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50' : 'text-zinc-400 hover:text-white'}">${t.tabBlitz}</button>
+        <div class="space-y-2.5 min-w-0">
+          <div class="flex items-center gap-1 overflow-x-auto pb-0.5">
+            ${g.openTabs.map(sym => {
+              const item = g.a[sym];
+              if (!item) return null;
+              const chg = item.p / item.d0 - 1;
+              return h`<div key=${sym} onClick=${() => setSel(sym)} class="flex items-center gap-1.5 px-2.5 py-1 rounded-t border text-[11px] cursor-pointer transition shrink-0 ${sym === sel ? 'bg-[#0d0d0f] border-zinc-700 border-b-transparent text-white font-bold' : 'bg-[#09090b] border-zinc-800/70 text-zinc-400 hover:text-zinc-200'}">
+                <${AssetLogo} sym=${sym} size=${14}/>
+                <span>${sym}</span>
+                <span class="text-[10px] ${cl(chg)}">${pc(chg)}</span>
+              </div>`;
+            })}
+          </div>
+
+          <div class="${PN} overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-zinc-800 bg-[#09090b]">
+              <div class="flex items-center gap-2.5">
+                <${AssetLogo} sym=${a.sym} size=${34}/>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <b class="text-white text-sm">${a.name} (${a.sym})</b>
+                    <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">${t.sectors[a.sec]}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-200 text-[10px] font-bold border border-zinc-700">Cap: ${fmtCap(a.p * a.sh)}</span>
+                  </div>
+                  <div class="flex items-center gap-2 mt-0.5 text-xs">
+                    <b class="text-base text-white">${usd(a.p)}</b>
+                    <span class=${cl(c0)}>${pc(c0)} (${usd(a.p - a.d0)})</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1">
+                ${B(mode === 'c', () => setMode('c'), '', t.candles)}
+                ${B(mode === 'a', () => setMode('a'), '', t.area)}
+                ${B(sma, () => setSma(x => !x), '', 'SMA20')}
+                ${B(ema, () => setEma(x => !x), '', 'EMA12')}
+                ${B(bb, () => setBb(x => !x), '', 'BB')}
+                ${B(rsiOn, () => setRsiOn(x => !x), '', 'RSI')}
+                ${B(macdOn, () => setMacdOn(x => !x), '', 'MACD')}
+                ${B(drawMode, () => setDrawMode(x => !x), '', drawMode ? t.clickChart : t.addLevel)}
+                ${customLevelsForSel.length > 0 && B(0, () => { g.levels[sel] = []; saveGame(g); fr(); }, '', `✕ (${customLevelsForSel.length})`)}
+              </div>
             </div>
 
-            ${tradeMode === 'options' ? h`
-              <div class="space-y-2.5 pt-1">
-                <div class="grid grid-cols-2 gap-1.5">
-                  <button onClick=${() => setOptType('CALL')} class="py-2 rounded font-black text-xs border transition ${optType === 'CALL' ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${t.callBull}</button>
-                  <button onClick=${() => setOptType('PUT')} class="py-2 rounded font-black text-xs border transition ${optType === 'PUT' ? 'bg-rose-600/25 border-rose-500 text-rose-300' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${t.putBear}</button>
+            <${Chart} a=${a} P=${P} blitzList=${activeBlitzForSel} customLevels=${customLevelsForSel} drawMode=${drawMode} onAddLevel=${px => {
+              g.levels[sel] = [...(g.levels[sel] || []), px];
+              setDrawMode(false);
+              saveGame(g);
+              fr();
+            }} mode=${mode} sma=${sma} ema=${ema} bb=${bb} rsiOn=${rsiOn} macdOn=${macdOn} vol=${vol} t=${t}/>
+          </div>
+
+          <div class="${PN} overflow-hidden">
+            <div class="flex items-center justify-between border-b border-zinc-800 px-3 py-1.5 bg-[#09090b] overflow-x-auto">
+              <div class="flex gap-1 shrink-0">
+                ${[
+                  ['p', `${t.tabPortfolio} (${pos.length + g.OP.length})`],
+                  ['forbes', t.tabForbes],
+                  ['tycoon', `${t.tabTycoon} (${unlockedCount}/${MISSIONS_DEF.length})`],
+                  ['map', t.tabHeatmap],
+                  ['o', `${t.tabOrders} (${g.O.length})`],
+                  ['b', t.tabBank],
+                  ['spy', t.tabSpy],
+                  ['h', t.tabHistory]
+                ].map(([k, lb]) => h`<button key=${k} onClick=${() => setTab(k)} class="px-2.5 py-1 rounded text-xs font-medium transition ${tab === k ? 'bg-white text-black font-bold' : 'text-zinc-400 hover:text-zinc-200'}">${lb}</button>`)}
+              </div>
+              <span class="text-[11px] text-zinc-400 hidden xl:block">${msg}</span>
+            </div>
+
+            <div class="max-h-[340px] overflow-auto">
+              ${tab === 'p' && h`<div>
+                <div class="grid grid-cols-3 gap-2 p-2.5 border-b border-zinc-800/80 bg-[#08080a] text-xs">
+                  <div><span class="text-[10px] text-zinc-500 block">${t.stockMargin}</span><b class="text-white">${fmtBillion(totalMargin)}</b></div>
+                  <div><span class="text-[10px] text-zinc-500 block">${t.realizedPnl}</span><b class=${cl(totalRealized)}>${fmtBillion(totalRealized)}</b></div>
+                  <div><span class="text-[10px] text-zinc-500 block">${t.callPutContracts}</span><b class="text-zinc-200">${g.OP.length} ${t.activeCount}</b></div>
                 </div>
 
-                <label class="block text-[11px] text-zinc-400">
-                  ${t.strikePrice} (${t.current}: ${usd(a.p)})
-                  <input type="number" step="any" value=${optStrike} onInput=${e => setOptStrike(e.target.value)} class="mt-1 font-bold"/>
-                </label>
+                ${pos.length > 0 && h`<table class="w-full text-xs">
+                  <thead class="text-[10px] text-zinc-500 uppercase border-b border-zinc-800"><tr><th>${t.thAsset}</th><th>${t.thType}</th><th>${t.thQty}</th><th>${t.thEntry}</th><th>${t.thCurrent}</th><th>${t.thPnl}</th><th></th></tr></thead>
+                  <tbody class="divide-y divide-zinc-800/60">
+                    ${pos.map(([s, p]) => {
+                      const x = g.a[s];
+                      const u = p.q > 0 ? (x.p - p.avg) * p.q : (p.avg - x.p) * Math.abs(p.q);
+                      return h`<tr key=${s} class="hover:bg-zinc-900/70">
+                        <td><button onClick=${() => selectAsset(s)} class="flex items-center gap-1.5 font-bold text-white hover:underline"><${AssetLogo} sym=${s} size=${16}/><span>${s}</span></button></td>
+                        <td><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${p.q > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}">${p.q > 0 ? 'LONG' : 'SHORT'} ${p.lev}x</span></td>
+                        <td>${Math.abs(p.q).toFixed(2)}</td>
+                        <td>${usd(p.avg)}</td>
+                        <td>${usd(x.p)}</td>
+                        <td class="font-bold ${cl(u)}">${fmtBillion(u)}</td>
+                        <td><button onClick=${() => { exec(g, s, p.q > 0 ? 'sell' : 'buy', Math.abs(p.q), 1); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-rose-600 hover:text-white text-[10px] text-zinc-300 transition">${t.closeBtn}</button></td>
+                      </tr>`;
+                    })}
+                  </tbody>
+                </table>`}
+
+                ${g.OP.length > 0 && h`<div class="border-t border-zinc-800">
+                  <div class="px-3 py-1.5 bg-[#08080a] text-[10px] font-bold uppercase text-zinc-200">${t.callPutContracts} (Call / Put)</div>
+                  <table class="w-full text-xs">
+                    <thead class="text-[10px] text-zinc-500 uppercase border-b border-zinc-800"><tr><th>${t.thContract}</th><th>${t.thExpires}</th><th>${t.thCurrVal}</th><th>${t.thPnl}</th><th>${t.thAction}</th></tr></thead>
+                    <tbody class="divide-y divide-zinc-800/60">
+                      ${g.OP.map(o => {
+                        const val = calcOptionPrice(g.a[o.sym], o.type, o.strike, o.daysLeft) * 100 * o.contracts;
+                        const pnl = val - o.cost;
+                        return h`<tr key=${o.id}>
+                          <td><span class="px-1.5 py-0.5 rounded text-[10px] font-bold mr-1.5 ${o.type === 'CALL' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}">${o.type}</span><b class="text-white">${o.sym}</b> $${o.strike} (x${o.contracts})</td>
+                          <td>${o.daysLeft}d</td>
+                          <td>${usd(val)}</td>
+                          <td class="font-bold ${cl(pnl)}">${usd(pnl)}</td>
+                          <td><button onClick=${() => { closeOptionContract(g, o.id, false); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-zinc-200 text-zinc-950 font-bold text-[10px] hover:bg-white">${t.exercise}</button></td>
+                        </tr>`;
+                      })}
+                    </tbody>
+                  </table>
+                </div>`}
+
+                ${pos.length === 0 && g.OP.length === 0 && h`<div class="p-6 text-center text-zinc-500 text-xs">${t.noOpenPositions}</div>`}
+              </div>`}
+
+              ${tab === 'forbes' && h`<div>
+                <div class="p-2.5 bg-[#08080a] border-b border-zinc-800 flex flex-wrap justify-between items-center gap-2">
+                  <div>
+                    <b class="text-xs text-white">${t.forbesTitle}</b>
+                    <span class="block text-[10px] text-zinc-400">${t.forbesSub}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button onClick=${() => setProfileModalOpen(true)} class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[10px] font-bold text-zinc-200">✎ ${t.profileBtn}</button>
+                    <input placeholder=${t.searchBillPlaceholder} value=${billSearch} onInput=${e => setBillSearch(e.target.value)} class="w-44 py-1 text-[10.5px]"/>
+                  </div>
+                </div>
+                <table class="w-full text-xs">
+                  <thead class="text-[10px] text-zinc-500 uppercase border-b border-zinc-800"><tr><th>#</th><th>${t.thBillionaire}</th><th>${t.thCountry}</th><th>${t.thEmpire}</th><th>${t.thWealth}</th><th>${t.thSessionChg}</th></tr></thead>
+                  <tbody class="divide-y divide-zinc-800/60">
+                    ${filteredBillionaires.map(b => h`
+                      <tr key=${b.id} class="${b.isUser ? 'bg-zinc-200/15 font-bold' : 'hover:bg-zinc-900/70'}">
+                        <td class="text-zinc-400 font-bold">#${b.rank}</td>
+                        <td class="flex items-center gap-2 ${b.isUser ? 'text-white' : 'text-zinc-200'}">
+                          ${b.isUser ? h`<${ProfileAvatar} profile=${profile} size=${20}/>` : h`<${AssetLogo} sym=${b.mainSym} size=${18}/>`}
+                          <div>
+                            <div>${b.name}</div>
+                            ${b.isUser && h`<div class="text-[9px] text-zinc-400 font-normal">${displayFundName} · ${profile.role || 'Managing Partner'}</div>`}
+                          </div>
+                        </td>
+                        <td class="text-zinc-400 text-[10.5px]">${b.country}</td>
+                        <td class="text-left">
+                          ${b.isUser ? h`<span class="text-[10px] text-zinc-200">${t.yourPortfolio}</span>` : h`<div class="flex flex-wrap gap-1">
+                            ${b.holdings.map(hItem => h`<button key=${hItem.sym} onClick=${() => selectAsset(hItem.sym)} class="px-1.5 py-0.2 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[9.5px] text-zinc-300 font-bold">${hItem.sym}</button>`)}
+                          </div>`}
+                        </td>
+                        <td class="font-bold text-white">${fmtBillion(b.val)}</td>
+                        <td class=${cl(b.chg)}>${fmtBillion(b.chg)} (${pc(b.ret)})</td>
+                      </tr>
+                    `)}
+                  </tbody>
+                </table>
+              </div>`}
+
+              ${tab === 'tycoon' && h`<div class="p-3 space-y-3">
+                <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 flex flex-wrap justify-between items-center gap-2">
+                  <div>
+                    <div class="text-[10px] text-zinc-400 uppercase font-bold">${t.aumTitle}</div>
+                    <b class="text-base text-white">${fmtBillion(g.aum)}</b>
+                    <span class="block text-[10px] text-zinc-400">${t.aumSub}</span>
+                  </div>
+                  <div class="text-right text-[11px]">
+                    <span class="block text-zinc-400">${t.currentFee} <b class="text-emerald-400">${(getFeeRate(g) * 100).toFixed(3)}%</b></span>
+                    <span class="block text-zinc-400">${t.maxLevLabel} <b class="text-white">${maxLevAllowed}x</b></span>
+                  </div>
+                </div>
 
                 <div>
-                  <div class="text-[10px] text-zinc-400 mb-1">${t.expiration}</div>
-                  <div class="grid grid-cols-4 gap-1">
-                    ${[1, 3, 5, 10].map(d => h`<button key=${d} onClick=${() => setOptDays(d)} class="py-1 rounded text-[11px] font-bold border ${optDays === d ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${d}d</button>`)}
-                  </div>
-                </div>
-
-                <label class="block text-[11px] text-zinc-400">
-                  ${t.contractsLabel}
-                  <input type="number" min="1" value=${optContracts} onInput=${e => setOptContracts(e.target.value)} class="mt-1 font-bold"/>
-                </label>
-
-                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800 space-y-1 text-[11px]">
-                  <div class="flex justify-between"><span class="text-zinc-400">${t.premiumPerShare}</span><b>${usd(calcOptionPrice(a, optType, +optStrike || a.p, optDays))}</b></div>
-                  <div class="flex justify-between"><span class="text-zinc-400">${t.totalPremiumCost}</span><b class="text-white">${usd(calcOptionPrice(a, optType, +optStrike || a.p, optDays) * 100 * (+optContracts || 0))}</b></div>
-                </div>
-
-                <button onClick=${goOption} class="w-full py-3 rounded bg-zinc-200 hover:bg-white text-zinc-950 font-black text-xs tracking-wider shadow-lg transition">
-                  ${t.buyContract} ${optType}
-                </button>
-              </div>
-            ` : tradeMode === 'blitz' ? h`
-              <div class="space-y-3 pt-1">
-                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800">
-                  <div class="text-[10px] text-zinc-400 uppercase mb-1">${t.expiryTime}</div>
-                  <div class="grid grid-cols-4 gap-1">
-                    ${[15, 30, 60, 120].map(s => h`<button key=${s} onClick=${() => setBlitzSec(s)} class="py-1.5 rounded text-xs font-bold border transition ${blitzSec === s ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${s < 60 ? s + 's' : (s / 60) + 'm'}</button>`)}
-                  </div>
-                </div>
-
-                <div class="p-2.5 rounded bg-[#060607] border border-zinc-800">
-                  <div class="text-[10px] text-zinc-400 uppercase mb-1">${t.blitzInvestment}</div>
-                  <input type="number" min="1" value=${blitzStake} onInput=${e => setBlitzStake(e.target.value)} class="font-bold text-base text-center"/>
-                  <div class="grid grid-cols-4 gap-1 mt-1.5">
-                    ${[500, 2500, 10000, 50000].map(v => h`<button key=${v} onClick=${() => setBlitzStake(String(v))} class="py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] hover:bg-zinc-800">$${v >= 1000 ? (v / 1000) + 'K' : v}</button>`)}
-                  </div>
-                </div>
-
-                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 text-center">
-                  <div class="text-[10px] text-zinc-400 uppercase">${t.expectedReturn}</div>
-                  <div class="text-2xl font-black text-emerald-400 mt-0.5">+92%</div>
-                  <div class="text-xs font-bold text-emerald-300">+${usd((+blitzStake || 0) * 1.92)} ${t.totalReturn}</div>
-                </div>
-
-                <div class="space-y-2 pt-1">
-                  <button onClick=${() => goBlitz('up')} class="w-full py-3.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.99]">
-                    <span>${t.upBtn}</span><span class="text-lg">↗</span>
-                  </button>
-                  <button onClick=${() => goBlitz('down')} class="w-full py-3.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-sm tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.99]">
-                    <span>${t.downBtn}</span><span class="text-lg">↘</span>
-                  </button>
-                </div>
-
-                ${(g.B || []).length > 0 && h`
-                  <div class="p-2 rounded bg-[#060607] border border-zinc-800 space-y-1">
-                    <div class="text-[10px] font-bold text-zinc-200 uppercase">${t.activeBlitz} (${g.B.length})</div>
-                    ${g.B.slice(0, 4).map(b => {
-                      const winning = (b.dir === 'up' && g.a[b.sym].p > b.entryPx) || (b.dir === 'down' && g.a[b.sym].p < b.entryPx);
-                      return h`<div key=${b.id} class="flex justify-between items-center text-[10.5px] px-1.5 py-1 rounded bg-zinc-900">
-                        <span><b>${b.sym}</b> ${b.dir === 'up' ? '↗' : '↘'} $${b.stake}</span>
-                        <span class="font-bold ${winning ? 'text-emerald-400' : 'text-rose-400'}">${winning ? t.winning : t.losing} · ${b.remSec}s</span>
+                  <div class="text-[10px] font-bold uppercase text-zinc-400 mb-1.5">${t.upgradesTitle}</div>
+                  <div class="grid gap-2 md:grid-cols-3">
+                    ${UPGRADES_DEF.map(u => {
+                      const owned = !!g.upgrades[u.id];
+                      return h`<div key=${u.id} class="p-2.5 rounded border ${owned ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-[#08080a] border-zinc-800'} flex flex-col justify-between gap-2">
+                        <div>
+                          <b class="text-xs text-white block">${lang === 'en' ? u.name_en : u.name}</b>
+                          <p class="text-[10px] text-zinc-400 mt-0.5">${lang === 'en' ? u.desc_en : u.desc}</p>
+                        </div>
+                        ${owned ? h`<span class="text-[10px] font-bold text-emerald-400">${t.installed}</span>` : h`<button onClick=${() => {
+                          if (g.cash < u.cost) { setMsg(lang === 'en' ? 'Insufficient cash' : 'Efectivo insuficiente'); return; }
+                          g.cash -= u.cost; g.upgrades[u.id] = true; saveGame(g); fr();
+                        }} class="w-full py-1 rounded bg-white hover:bg-zinc-200 text-black font-bold text-[10px]">${t.acquire} (${fmtBillion(u.cost)})</button>`}
                       </div>`;
                     })}
                   </div>
-                `}
-              </div>
-            ` : h`
-              <div class="space-y-2.5">
-                <div class="p-2 rounded bg-[#060607] border border-zinc-800 flex justify-between items-center text-[11px]">
-                  <div>
-                    <span class="text-zinc-500 block text-[10px]">${t.position} (${P.q > 0 ? 'LONG' : P.q < 0 ? 'SHORT' : t.neutral})</span>
-                    <b class="text-zinc-100">${Math.abs(P.q)} u.</b> <span class="text-zinc-400">@ ${usd(P.avg)}</span>
-                  </div>
-                  <div class="text-right">
-                    <span class="text-zinc-500 block text-[10px]">${t.unrealizedPnl}</span>
-                    <b class=${cl(curPosPnl)}>${usd(curPosPnl)}</b>
-                  </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-1.5">
-                  ${B(orderType === 'market', () => setOrderType('market'), null, t.marketOrder, 'justify-center')}
-                  ${B(orderType === 'limit', () => { setOrderType('limit'); if (!limitPx) setLimitPx(a.p.toFixed(2)); }, null, t.limitOrder, 'justify-center')}
-                </div>
+                <div class="grid gap-2.5 md:grid-cols-2">
+                  <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800">
+                    <b class="text-[11px] text-zinc-200 block mb-1.5">${t.earningsCalTitle}</b>
+                    <div class="space-y-1 text-xs">
+                      ${g.earningsCal.map(e => h`<div key=${e.sym} onClick=${() => selectAsset(e.sym)} class="flex justify-between items-center p-1.5 rounded bg-zinc-900/70 hover:bg-zinc-800 cursor-pointer">
+                        <div class="flex items-center gap-1.5"><${AssetLogo} sym=${e.sym} size=${16}/><b class="text-white">${e.sym}</b><span class="text-[10px] text-zinc-500 truncate max-w-[100px]">${e.name}</span></div>
+                        <span class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200 text-[10px] font-bold">${t.inDaysPrefix}${e.inDays}d</span>
+                      </div>`)}
+                    </div>
+                  </div>
 
-                ${orderType === 'limit' && h`
-                  <label class="block text-[11px] text-zinc-200">
-                    ${t.targetPrice}
-                    <input type="number" step="any" value=${limitPx} onInput=${e => setLimitPx(e.target.value)} class="mt-1 font-bold"/>
-                  </label>
-                `}
+                  <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                    <b class="text-[11px] text-zinc-200 block">${t.priceAlertsTitle} (${sel})</b>
+                    <div class="flex gap-1.5">
+                      <input type="number" step="0.01" placeholder=${a.p.toFixed(2)} value=${alertPx} onInput=${e => setAlertPx(e.target.value)} class="text-xs py-1"/>
+                      <button onClick=${() => {
+                        const v = +alertPx;
+                        if (!(v > 0)) return;
+                        g.alerts.push({ id: g.alid++, sym: sel, val: v, cond: v >= a.p ? 'above' : 'below' });
+                        setAlertPx(''); saveGame(g); fr();
+                      }} class="px-2.5 py-1 rounded bg-white text-black text-xs font-bold shrink-0">${t.addAlert}</button>
+                    </div>
+                    <div class="space-y-1 max-h-24 overflow-y-auto text-[11px]">
+                      ${g.alerts.map(alItem => h`<div key=${alItem.id} class="flex justify-between items-center px-2 py-1 rounded bg-zinc-900">
+                        <span><b>${alItem.sym}</b> ${alItem.cond === 'above' ? '≥' : '≤'} ${usd(alItem.val)}</span>
+                        <button onClick=${() => { g.alerts = g.alerts.filter(x => x.id !== alItem.id); saveGame(g); fr(); }} class="text-rose-400">✕</button>
+                      </div>`)}
+                    </div>
+                  </div>
+                </div>
 
                 <div>
-                  <div class="flex justify-between text-[10px] text-zinc-400 mb-1">
-                    <span>${t.leverage}</span>
-                    <span class="text-white font-bold">${lev}x (${t.maxWord} ${maxLevAllowed}x)</span>
-                  </div>
-                  <div class="grid grid-cols-4 gap-1">
-                    ${[1, 2, 5, maxLevAllowed].map(x => h`<button key=${x} onClick=${() => setLev(x)} class="py-1 rounded text-[10px] font-bold border transition ${lev === x ? 'bg-zinc-200/15 border-zinc-300 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${x}x</button>`)}
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-1.5">
-                  ${B(!byUsd, () => { setByUsd(false); setQ(''); }, null, t.units, 'justify-center')}
-                  ${B(byUsd, () => { setByUsd(true); setQ(''); }, null, t.usdAmount, 'justify-center')}
-                </div>
-
-                <label class="block text-[11px] text-zinc-400">
-                  ${byUsd ? t.marginToInvest : t.shareQty}
-                  <input type="number" min="0" step="any" value=${q} onInput=${e => setQ(e.target.value)} class="mt-1 font-bold text-sm"/>
-                </label>
-
-                <div class="grid grid-cols-5 gap-1">
-                  ${[0.1, 0.25, 0.5, 1].map(v => h`<button key=${v} onClick=${() => setQ(String(byUsd ? Math.floor(g.cash * v * 100) / 100 : uf(a, 'buy', g.cash * v, lev, g)))} class="rounded bg-zinc-900 border border-zinc-800 py-1 text-[10px] font-semibold hover:bg-zinc-800">${v === 1 ? t.maxWord : (v * 100) + '%'}</button>`)}
-                  <button onClick=${() => setQ(String(byUsd ? (Math.abs(P.q) * a.p / (P.lev || 1)).toFixed(2) : Math.abs(P.q)))} class="rounded bg-zinc-800 border border-zinc-600 text-zinc-200 py-1 text-[10px] font-semibold">${t.closeBtn}</button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-800">
-                  <label class="block text-[10.5px] text-rose-300">Stop Loss<input type="number" placeholder=${(a.p * 0.95).toFixed(2)} value=${sl} onInput=${e => setSl(e.target.value)} class="mt-1"/></label>
-                  <label class="block text-[10.5px] text-emerald-300">Take Profit<input type="number" placeholder=${(a.p * 1.08).toFixed(2)} value=${tp} onInput=${e => setTp(e.target.value)} class="mt-1"/></label>
-                </div>
-
-                ${riskReward && h`
-                  <div class="flex justify-between items-center px-2 py-1 rounded bg-zinc-900 text-[10px]">
-                    <span class="text-zinc-400">${t.rrRatio}</span>
-                    <b class="${+riskReward >= 2 ? 'text-emerald-400' : 'text-zinc-200'}">1 : ${riskReward}</b>
-                  </div>
-                `}
-
-                <button onClick=${setLv} class="w-full rounded border border-zinc-800 bg-zinc-900 py-1 text-[10.5px] font-medium hover:bg-zinc-800">${t.applySlTp}</button>
-
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                  <button onClick=${() => go('buy')} class="py-2.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition">${P.q < 0 ? t.closeShort : t.buyLong}</button>
-                  <button onClick=${() => go('sell')} class="py-2.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition">${P.q > 0 ? t.sellLong : t.shortSell}</button>
-                </div>
-              </div>
-            `}
-
-            ${msg && h`<div class="p-2 rounded bg-zinc-800/90 border border-zinc-600 text-zinc-100 text-[11px] font-medium">${msg}</div>`}
-          </section>
-        </aside>
-
-        <div class="lg:col-span-2 grid gap-2.5 md:grid-cols-[235px_minmax(0,1fr)] min-w-0">
-          <section class="${PN} p-2.5">
-            <div class="font-bold text-zinc-100 text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><${AssetLogo} sym=${a.sym} size=${16}/><span>${t.orderBook} · ${a.sym}</span></div>
-            <${Book} a=${a} t=${t} onPickPrice=${px => { setTradeMode('actions'); setOrderType('limit'); setLimitPx(px); setMsg((lang === 'en' ? 'Limit price set to ' : 'Precio fijado en Orden Límite: ') + px); }}/>
-          </section>
-
-          <section class="${PN} min-w-0 flex flex-col">
-            <div class="flex flex-wrap items-center gap-1 p-2 border-b border-zinc-800 bg-[#060607] rounded-t-md">
-              ${B(tab === 'p', () => setTab('p'), null, `${t.tabPortfolio} (${pos.length + (g.OP || []).length})`)}
-              ${B(tab === 'b', () => setTab('b'), null, `${t.tabForbes} (#${userRank})`)}
-              ${B(tab === 'tycoon', () => setTab('tycoon'), null, t.tabTycoon)}
-              ${B(tab === 'h', () => setTab('h'), null, t.tabHeatmap)}
-              ${B(tab === 'o', () => setTab('o'), null, `${t.tabOrders} (${g.O.length})`)}
-              ${B(tab === 'bank', () => setTab('bank'), null, t.tabBank)}
-              ${B(tab === 'c', () => setTab('c'), null, t.tabSpy)}
-              ${B(tab === 't', () => setTab('t'), null, t.tabHistory)}
-            </div>
-
-            <div class="overflow-x-auto max-h-[340px] overflow-y-auto flex-1">
-              ${tab === 'p' && h`
-                <div>
-                  <div class="grid grid-cols-3 gap-2 p-2.5 bg-[#08080a] border-b border-zinc-800 text-[11px]">
-                    <div><span class="text-zinc-500 block text-[10px]">${t.stockMargin}</span><b class="text-zinc-100">${usd(totalMargin)}</b></div>
-                    <div><span class="text-zinc-500 block text-[10px]">${t.realizedPnl}</span><b class=${cl(totalRealized)}>${usd(totalRealized)}</b></div>
-                    <div><span class="text-zinc-500 block text-[10px]">${t.callPutContracts}</span><b class="text-zinc-200">${(g.OP || []).length} ${t.activeCount}</b></div>
-                  </div>
-
-                  ${pos.length > 0 && h`
-                    <table class="w-full">
-                      <thead>${th(t.thAsset, t.thType, t.thQty, t.thEntry, t.thCurrent, t.thPnl, 'ROI')}</thead>
-                      <tbody class="divide-y divide-zinc-800/70">
-                        ${pos.map(([s, p]) => {
-                          const x = g.a[s];
-                          const isLong = p.q > 0;
-                          const absQ = Math.abs(p.q);
-                          const u = isLong ? (x.p - p.avg) * absQ : (p.avg - x.p) * absQ;
-                          const roi = p.margin > 0 ? u / p.margin : 0;
-                          return h`<tr key=${s} class="cursor-pointer hover:bg-zinc-900" onClick=${() => selectAsset(s)}>
-                            <td class="font-bold text-zinc-100"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${s} size=${16}/><span>${s}</span></div></td>
-                            <td><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${isLong ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${isLong ? 'LONG' : 'SHORT'} ${p.lev > 1 ? p.lev + 'x' : ''}</span></td>
-                            <td>${absQ}</td>
-                            <td>${p.avg.toFixed(2)}</td>
-                            <td>${x.p.toFixed(2)}</td>
-                            <td class="font-semibold ${cl(u)}">${usd(u)}</td>
-                            <td class="font-semibold ${cl(roi)}">${pc(roi)}</td>
-                          </tr>`;
-                        })}
-                      </tbody>
-                    </table>
-                  `}
-
-                  ${(g.OP || []).length > 0 && h`
-                    <div class="p-2 border-t border-zinc-800">
-                      <div class="text-[10px] font-bold uppercase text-zinc-300 mb-1">${t.callPutContracts}</div>
-                      <table class="w-full">
-                        <thead>${th(t.thAsset, t.thContract, 'Strike', t.thExpires, t.thCurrVal, t.thPnl, t.thAction)}</thead>
-                        <tbody class="divide-y divide-zinc-800/70">
-                          ${g.OP.map(o => {
-                            const curVal = calcOptionPrice(g.a[o.sym], o.type, o.strike, o.daysLeft) * 100 * o.contracts;
-                            const pnl = curVal - o.cost;
-                            return h`<tr key=${o.id}>
-                              <td class="font-bold text-white"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${o.sym} size=${16}/><span>${o.sym}</span></div></td>
-                              <td class="font-bold ${o.type === 'CALL' ? 'text-emerald-400' : 'text-rose-400'}">${o.contracts}x ${o.type}</td>
-                              <td>${usd(o.strike)}</td>
-                              <td>${o.daysLeft}d</td>
-                              <td>${usd(curVal)}</td>
-                              <td class="font-bold ${cl(pnl)}">${usd(pnl)}</td>
-                              <td><button onClick=${() => { closeOptionContract(g, o.id, false); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-600 text-white text-[10px] font-bold">${t.exercise}</button></td>
-                            </tr>`;
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  `}
-
-                  ${!pos.length && !(g.OP || []).length && h`<p class="p-8 text-center text-zinc-500">${t.noOpenPositions}</p>`}
-                </div>
-              `}
-
-              ${tab === 'b' && h`
-                <div class="p-2.5 space-y-2.5">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div class="text-[11px] font-bold uppercase text-white">${t.forbesTitle}</div>
-                      <div class="text-[10px] text-zinc-400">${t.forbesSub}</div>
-                    </div>
-                    <input placeholder=${t.searchBillPlaceholder} value=${billSearch} onInput=${e => setBillSearch(e.target.value)} class="w-48 py-1 text-[11px]"/>
-                  </div>
-
-                  <table class="w-full border border-zinc-800 rounded">
-                    <thead>${th('#', t.thBillionaire, t.thCountry, t.thEmpire, t.thWealth, t.thSessionChg)}</thead>
-                    <tbody class="divide-y divide-zinc-800/70">
-                      ${filteredBillionaires.map(b => h`
-                        <tr key=${b.id} onClick=${() => selectAsset(b.mainSym)} class="cursor-pointer transition ${b.isUser ? 'bg-zinc-200/15 font-bold' : 'hover:bg-zinc-900'}">
-                          <td class="font-bold ${b.rank <= 3 ? 'text-white' : 'text-zinc-400'}">#${b.rank}</td>
-                          <td class="${b.isUser ? 'text-white' : 'text-zinc-200'} font-semibold">
-                            <div class="flex items-center gap-2">
-                              ${b.isUser && h`<${ProfileAvatar} profile=${profile} size=${20}/>`}
-                              <span>${b.name}</span>
-                            </div>
-                          </td>
-                          <td class="text-[10px] text-zinc-400">${b.country}</td>
-                          <td class="text-[10px] text-zinc-300">
-                            ${b.isUser ? (profile.fund?.trim() || t.yourPortfolio) : h`<div class="flex items-center justify-end gap-1">
-                              ${(b.holdings || []).map(hItem => h`<span key=${hItem.sym} class="inline-flex items-center gap-1 px-1 py-0.2 rounded bg-zinc-900 border border-zinc-800"><${AssetLogo} sym=${hItem.sym} size=${12}/><span>${hItem.sym}</span></span>`)}
-                            </div>`}
-                          </td>
-                          <td class="font-bold text-white">${fmtBillion(b.val)}</td>
-                          <td class="font-semibold ${cl(b.chg)}">${b.chg >= 0 ? '+' : ''}${fmtBillion(b.chg)} (${pc(b.ret)})</td>
-                        </tr>
-                      `)}
-                    </tbody>
-                  </table>
-                </div>
-              `}
-
-              ${tab === 'tycoon' && h`
-                <div class="p-3 space-y-3">
-                  <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <div class="text-[10px] font-bold uppercase text-emerald-400">${t.aumTitle}</div>
-                      <div class="text-base font-black text-white">${fmtBillion(g.aum || 0)}</div>
-                      <div class="text-[10px] text-zinc-400">${t.aumSub}</div>
-                    </div>
-                    <div class="text-right text-[10px]">
-                      <div class="text-zinc-400">${t.currentFee} <b class="text-white">${(getFeeRate(g) * 100).toFixed(3)}%</b></div>
-                      <div class="text-zinc-400">${t.maxLevLabel} <b class="text-white">${maxLevAllowed}x</b></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div class="text-[10px] font-bold uppercase text-zinc-200 mb-1.5">${t.upgradesTitle}</div>
-                    <div class="grid gap-2 sm:grid-cols-3">
-                      ${UPGRADES_DEF.map(u => {
-                        const owned = !!g.upgrades[u.id];
-                        return h`<div key=${u.id} class="p-2.5 rounded border flex flex-col justify-between ${owned ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-[#08080a] border-zinc-800'}">
-                          <div>
-                            <b class="text-xs block ${owned ? 'text-emerald-300' : 'text-zinc-100'}">${lang === 'en' ? u.name_en : u.name}</b>
-                            <p class="text-[10px] text-zinc-400 mt-1">${lang === 'en' ? u.desc_en : u.desc}</p>
-                          </div>
-                          <div class="mt-2 pt-2 border-t border-zinc-800/80">
-                            ${owned ? h`<span class="text-[10px] font-bold text-emerald-400">${t.installed}</span>` : h`<button onClick=${() => {
-                              if (g.cash < u.cost) { setMsg((lang === 'en' ? 'Need ' : 'Necesitas ') + usd(u.cost)); return; }
-                              g.cash -= u.cost; g.upgrades[u.id] = true; saveGame(g); setMsg((lang === 'en' ? 'Upgrade unlocked: ' : 'Mejora adquirida: ') + (lang === 'en' ? u.name_en : u.name)); fr();
-                            }} class="w-full py-1 rounded bg-zinc-200 hover:bg-white text-zinc-950 font-black text-[10px]">${t.acquire} (${fmtBillion(u.cost)})</button>`}
-                          </div>
-                        </div>`;
-                      })}
-                    </div>
-                  </div>
-
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800">
-                      <div class="text-[10px] font-bold uppercase text-zinc-200 mb-1.5">${t.earningsCalTitle}</div>
-                      <div class="space-y-1">
-                        ${(g.earningsCal || []).map(e => h`<div key=${e.sym} onClick=${() => selectAsset(e.sym)} class="flex justify-between items-center text-[11px] px-2 py-1 rounded bg-zinc-900 cursor-pointer hover:bg-zinc-800">
-                          <span class="flex items-center gap-1.5"><${AssetLogo} sym=${e.sym} size=${14}/><b>${e.sym}</b> <span class="text-zinc-400">(${e.name})</span></span>
-                          <span class="text-zinc-200 font-bold">${t.inDaysPrefix}${e.inDays}d</span>
-                        </div>`)}
-                      </div>
-                    </div>
-
-                    <div class="p-2.5 rounded bg-[#08080a] border border-zinc-800 space-y-2">
-                      <div class="text-[10px] font-bold uppercase text-zinc-200">${t.priceAlertsTitle} (${sel})</div>
-                      <div class="flex gap-1.5">
-                        <input type="number" placeholder=${a.p.toFixed(2)} value=${alertPx} onInput=${e => setAlertPx(e.target.value)} class="py-1 text-xs"/>
-                        <button onClick=${() => {
-                          const v = +alertPx; if (!(v > 0)) return;
-                          g.alerts.unshift({ id: g.alid++, sym: sel, val: v, cond: v >= a.p ? 'above' : 'below' });
-                          setAlertPx(''); saveGame(g); fr();
-                        }} class="px-3 rounded bg-zinc-200 text-zinc-950 font-bold text-xs shrink-0">${t.addAlert}</button>
-                      </div>
-                      <div class="space-y-1 max-h-24 overflow-y-auto">
-                        ${g.alerts.map(al => h`<div key=${al.id} class="flex justify-between items-center text-[10.5px] px-2 py-0.5 rounded bg-zinc-900">
-                          <span><b>${al.sym}</b> ${al.cond === 'above' ? '≥' : '≤'} ${usd(al.val)}</span>
-                          <button onClick=${() => { g.alerts = g.alerts.filter(x => x.id !== al.id); fr(); }} class="text-rose-400 font-bold">✕</button>
-                        </div>`)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div class="text-[10px] font-bold uppercase text-zinc-400 mb-1.5">${t.missionsTitle} (${unlockedCount}/${MISSIONS_DEF.length})</div>
-                    <div class="grid gap-1.5 sm:grid-cols-3">
-                      ${MISSIONS_DEF.map(m => {
-                        const ok = !!g.unlocked[m.id];
-                        return h`<div key=${m.id} class="p-2 rounded border text-[10.5px] ${ok ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-[#08080a] border-zinc-800 opacity-75'}">
-                          <div class="flex justify-between font-bold ${ok ? 'text-emerald-300' : 'text-zinc-200'}"><span>${ok ? '✓ ' : ''}${lang === 'en' ? m.title_en : m.title}</span><span>+${fmtBillion(m.reward * (g.k0 / 1e8))}</span></div>
-                        </div>`;
-                      })}
-                    </div>
-                  </div>
-                </div>
-              `}
-
-              ${tab === 'h' && h`<${HeatmapView} assets=${g.A} t=${t} onSelect=${s => { selectAsset(s); setTab('p'); }}/>`}
-
-              ${tab === 'o' && (g.O.length ? h`<table class="w-full"><thead>${th(t.thAsset, t.thOrder, t.thQty, t.thTargetPx, t.thLev, t.thAction)}</thead><tbody class="divide-y divide-zinc-800/70">${g.O.map(o => h`<tr key=${o.id}>
-                <td class="font-bold text-zinc-100"><div class="flex items-center gap-1.5"><${AssetLogo} sym=${o.sym} size=${16}/><span>${o.sym}</span></div></td>
-                <td class=${o.side === 'buy' ? 'text-emerald-400' : 'text-rose-400'}>${o.side === 'buy' ? t.limitBuy : t.limitSell}</td>
-                <td>${o.q}</td>
-                <td>${usd(o.targetPx)}</td>
-                <td>${o.lev}x</td>
-                <td><button onClick=${() => { g.O = g.O.filter(x => x.id !== o.id); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] hover:bg-rose-500/30">${t.cancel}</button></td>
-              </tr>`)}</tbody></table>` : h`<p class="p-8 text-center text-zinc-500">${t.noLimitOrders}</p>`)}
-
-              ${tab === 'bank' && h`<div class="p-3 grid gap-3 sm:grid-cols-2">
-                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
-                  <div class="flex justify-between items-center"><b class="text-emerald-400 text-xs">${t.treasuryBonds}</b><b class="text-white">${usd(g.bonds)}</b></div>
-                  <p class="text-[11px] text-zinc-400">${t.treasuryDesc}</p>
-                  <input type="number" value=${bankAmt} onInput=${e => setBankAmt(e.target.value)}/>
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button onClick=${() => { const v = Math.min(g.cash, Math.max(0, +bankAmt || 0)); g.cash -= v; g.bonds += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-emerald-600/25 border border-emerald-500/40 text-emerald-300 font-semibold">${t.buyBonds}</button>
-                    <button onClick=${() => { const v = Math.min(g.bonds, Math.max(0, +bankAmt || 0)); g.bonds -= v; g.cash += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-zinc-800 text-zinc-200 font-semibold">${t.withdraw}</button>
-                  </div>
-                </div>
-                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
-                  <div class="flex justify-between items-center"><b class="text-rose-400 text-xs">${t.bankDebt}</b><b class="text-rose-300">${usd(g.debt)}</b></div>
-                  <p class="text-[11px] text-zinc-400">${t.bankDebtDesc}</p>
-                  <input type="number" value=${bankAmt} onInput=${e => setBankAmt(e.target.value)}/>
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button onClick=${() => { const maxL = Math.max(0, E * 2 - g.debt); const v = Math.min(maxL, Math.max(0, +bankAmt || 0)); g.debt += v; g.cash += v; saveGame(g); fr(); }} class="py-1.5 rounded bg-rose-600/25 border border-rose-500/40 text-rose-300 font-semibold">${t.takeLoan}</button>
-                    <button onClick=${() => { const v = Math.min(g.cash, g.debt, Math.max(0, +bankAmt || 0)); g.debt -= v; g.cash -= v; saveGame(g); fr(); }} class="py-1.5 rounded bg-zinc-800 text-zinc-200 font-semibold">${t.payDebt}</button>
+                  <div class="text-[10px] font-bold uppercase text-zinc-400 mb-1.5">${t.missionsTitle}</div>
+                  <div class="grid gap-2 md:grid-cols-2">
+                    ${MISSIONS_DEF.map(m => {
+                      const done = !!g.unlocked[m.id];
+                      const scaledRew = m.reward * (g.k0 / 1e8);
+                      return h`<div key=${m.id} class="p-2 rounded border flex justify-between items-center ${done ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-[#08080a] border-zinc-800 text-zinc-400'}">
+                        <div><b class="text-xs ${done ? 'text-emerald-300' : 'text-zinc-200'}">${done ? '✓ ' : '○ '}${lang === 'en' ? m.title_en : m.title}</b><div class="text-[10px]">${m.desc}</div></div>
+                        <span class="px-2 py-0.5 rounded bg-zinc-900 text-zinc-200 font-bold text-[10px] shrink-0">+${fmtBillion(scaledRew)}</span>
+                      </div>`;
+                    })}
                   </div>
                 </div>
               </div>`}
 
-              ${tab === 'c' && h`<${BenchmarkChart} eqHist=${g.eqHist} spyHist=${g.spyHist} t=${t}/>`}
+              ${tab === 'map' && h`<${HeatmapView} assets=${g.A} onSelect=${selectAsset} t=${t}/>`}
 
-              ${tab === 't' && h`<table class="w-full"><thead>${th(t.thDate, t.thAsset, t.thOperation, t.thQty, t.thPrice, t.thResult)}</thead><tbody class="divide-y divide-zinc-800/70">${g.L.slice(0, 45).map((x, i) => h`<tr key=${i}>
-                <td class="text-zinc-500">${tm(x.d, x.tk, lang)}</td>
-                <td class="font-bold text-zinc-200">${x.sym}</td>
-                <td>${x.k}</td>
-                <td>${x.q}</td>
-                <td>${usd(x.px)}</td>
-                <td class=${x.pnl ? cl(x.pnl) : 'text-zinc-500'}>${x.pnl ? usd(x.pnl) : '-'}</td>
-              </tr>`)}</tbody></table>`}
+              ${tab === 'o' && (g.O.length ? h`<table class="w-full text-xs">
+                <thead class="text-[10px] text-zinc-500 uppercase border-b border-zinc-800"><tr><th>${t.thAsset}</th><th>${t.thOrder}</th><th>${t.thQty}</th><th>${t.thTargetPx}</th><th>${t.thLev}</th><th></th></tr></thead>
+                <tbody class="divide-y divide-zinc-800/60">
+                  ${g.O.map(o => h`<tr key=${o.id}>
+                    <td><b class="text-white">${o.sym}</b></td>
+                    <td class=${o.side === 'buy' ? 'text-emerald-400' : 'text-rose-400'}>${o.side === 'buy' ? t.limitBuy : t.limitSell}</td>
+                    <td>${o.q}</td>
+                    <td>${usd(o.targetPx)}</td>
+                    <td>${o.lev}x</td>
+                    <td><button onClick=${() => { g.O = g.O.filter(x => x.id !== o.id); saveGame(g); fr(); }} class="px-2 py-0.5 rounded bg-zinc-800 text-rose-400 text-[10px]">${t.cancel}</button></td>
+                  </tr>`)}
+                </tbody>
+              </table>` : h`<div class="p-6 text-center text-zinc-500 text-xs">${t.noLimitOrders}</div>`)}
+
+              ${tab === 'b' && h`<div class="p-4 grid gap-3 sm:grid-cols-2 text-xs">
+                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                  <div class="flex justify-between"><span class="text-zinc-400">${t.treasuryBonds}</span><b class="text-emerald-400">${fmtBillion(g.bonds)}</b></div>
+                  <p class="text-[11px] text-zinc-500">${t.treasuryDesc}</p>
+                  <div class="flex gap-2">
+                    <button onClick=${() => { const v = +bankAmt; if (v > 0 && g.cash >= v) { g.cash -= v; g.bonds += v; saveGame(g); fr(); } }} class="flex-1 py-1.5 rounded bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold">${t.buyBonds}</button>
+                    <button onClick=${() => { const v = Math.min(+bankAmt, g.bonds); if (v > 0) { g.bonds -= v; g.cash += v; saveGame(g); fr(); } }} class="flex-1 py-1.5 rounded bg-zinc-800 text-zinc-300">${t.withdraw}</button>
+                  </div>
+                </div>
+                <div class="p-3 rounded bg-[#08080a] border border-zinc-800 space-y-2">
+                  <div class="flex justify-between"><span class="text-zinc-400">${t.bankDebt}</span><b class="text-rose-400">${fmtBillion(g.debt)}</b></div>
+                  <p class="text-[11px] text-zinc-500">${t.bankDebtDesc}</p>
+                  <div class="flex gap-2">
+                    <button onClick=${() => { const v = +bankAmt; if (v > 0 && g.debt + v <= E * 2) { g.debt += v; g.cash += v; saveGame(g); fr(); } }} class="flex-1 py-1.5 rounded bg-rose-600/20 border border-rose-500/40 text-rose-300 font-bold">${t.takeLoan}</button>
+                    <button onClick=${() => { const v = Math.min(+bankAmt, g.debt, g.cash); if (v > 0) { g.debt -= v; g.cash -= v; saveGame(g); fr(); } }} class="flex-1 py-1.5 rounded bg-zinc-800 text-zinc-300">${t.payDebt}</button>
+                  </div>
+                </div>
+                <div class="sm:col-span-2 flex items-center gap-2">
+                  <input type="number" step="10000" value=${bankAmt} onInput=${e => setBankAmt(e.target.value)} class="max-w-xs"/>
+                  ${[100000, 1000000, 10000000].map(v => h`<button key=${v} onClick=${() => setBankAmt(String(v))} class="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px]">${fmtBillion(v)}</button>`)}
+                </div>
+              </div>`}
+
+              ${tab === 'spy' && h`<${BenchmarkChart} eqHist=${g.eqHist} spyHist=${g.spyHist} t=${t}/>`}
+
+              ${tab === 'h' && h`<table class="w-full text-xs">
+                <thead class="text-[10px] text-zinc-500 uppercase border-b border-zinc-800"><tr><th>${t.thDate}</th><th>${t.thAsset}</th><th>${t.thOperation}</th><th>${t.thPrice}</th><th>${t.thResult}</th></tr></thead>
+                <tbody class="divide-y divide-zinc-800/60">
+                  ${g.L.slice(0, 60).map((x, i) => h`<tr key=${i}>
+                    <td class="text-zinc-500">${tm(x.d, x.tk, lang)}</td>
+                    <td class="font-bold text-white">${x.sym}</td>
+                    <td>${x.k}</td>
+                    <td>${usd(x.px)}</td>
+                    <td class="font-bold ${x.pnl ? cl(x.pnl) : 'text-zinc-500'}">${x.pnl ? fmtBillion(x.pnl) : '—'}</td>
+                  </tr>`)}
+                </tbody>
+              </table>`}
             </div>
-          </section>
+          </div>
         </div>
-      </main>
+
+        <div class="space-y-2.5">
+          <div class="${PN} p-3 space-y-2.5">
+            <div class="grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded border border-zinc-800 text-[10.5px]">
+              <button onClick=${() => setTradeMode('actions')} class="py-1 rounded font-bold transition ${tradeMode === 'actions' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}">${t.tabActions}</button>
+              <button onClick=${() => { setTradeMode('options'); if (!optStrike) setOptStrike(String(Math.round(a.p))); }} class="py-1 rounded font-bold transition ${tradeMode === 'options' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}">${t.tabOptions}</button>
+              <button onClick=${() => setTradeMode('blitz')} class="py-1 rounded font-bold transition ${tradeMode === 'blitz' ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'}">${t.tabBlitz}</button>
+            </div>
+
+            ${tradeMode === 'options' ? h`<div class="space-y-2.5">
+              <div class="grid grid-cols-2 gap-1.5">
+                <button onClick=${() => setOptType('CALL')} class="py-1.5 rounded text-xs font-black border ${optType === 'CALL' ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}">${t.callBull}</button>
+                <button onClick=${() => setOptType('PUT')} class="py-1.5 rounded text-xs font-black border ${optType === 'PUT' ? 'bg-rose-600/20 border-rose-500 text-rose-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}">${t.putBear}</button>
+              </div>
+
+              <label class="block text-xs text-zinc-400">
+                ${t.strikePrice} (${t.current}: ${usd(a.p)})
+                <input type="number" step="1" value=${optStrike} onInput=${e => setOptStrike(e.target.value)} class="mt-1"/>
+              </label>
+
+              <div>
+                <span class="block text-[10px] text-zinc-500 uppercase mb-1">${t.expiration}</span>
+                <div class="grid grid-cols-3 gap-1">
+                  ${[1, 3, 7].map(d => h`<button key=${d} onClick=${() => setOptDays(d)} class="py-1 rounded text-xs font-bold border ${optDays === d ? 'bg-white text-black border-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${d} ${d === 1 ? (lang === 'en' ? 'Day' : 'Día') : (lang === 'en' ? 'Days' : 'Días')}</button>`)}
+                </div>
+              </div>
+
+              <label class="block text-xs text-zinc-400">
+                ${t.contractsLabel}
+                <input type="number" min="1" step="1" value=${optContracts} onInput=${e => setOptContracts(e.target.value)} class="mt-1"/>
+              </label>
+
+              <div class="p-2 rounded bg-zinc-900 border border-zinc-800 text-[11px] space-y-1">
+                <div class="flex justify-between"><span class="text-zinc-400">${t.premiumPerShare}</span><b class="text-white">${usd(optPremPerShare)}</b></div>
+                <div class="flex justify-between"><span class="text-zinc-400">${t.totalPremiumCost}</span><b class="text-zinc-200">${usd(optTotalCost)}</b></div>
+              </div>
+
+              <button onClick=${goOption} class="w-full py-2.5 rounded bg-white hover:bg-zinc-200 text-black font-black text-xs transition shadow-lg">
+                ${t.buyContract} ${optType} (${usd(optTotalCost)})
+              </button>
+            </div>` : tradeMode === 'blitz' ? h`<div class="space-y-2.5">
+              <div>
+                <span class="block text-[10px] text-zinc-500 uppercase mb-1">${t.expiryTime}</span>
+                <div class="grid grid-cols-4 gap-1">
+                  ${[15, 30, 60, 120].map(sec => h`<button key=${sec} onClick=${() => setBlitzSec(sec)} class="py-1 rounded text-xs font-bold border ${blitzSec === sec ? 'bg-white text-black border-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${sec}s</button>`)}
+                </div>
+              </div>
+
+              <label class="block text-xs text-zinc-400">
+                ${t.blitzInvestment}
+                <input type="number" min="10" step="50" value=${blitzStake} onInput=${e => setBlitzStake(e.target.value)} class="mt-1 text-sm font-bold"/>
+              </label>
+
+              <div class="flex gap-1">
+                ${[250, 1000, 5000, 25000].map(amt => h`<button key=${amt} onClick=${() => setBlitzStake(String(amt))} class="flex-1 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] text-zinc-300">${fmtBillion(amt)}</button>`)}
+              </div>
+
+              <div class="p-2 rounded bg-zinc-900/90 border border-zinc-800 flex justify-between items-center text-xs">
+                <span class="text-zinc-400">${t.expectedReturn} <b class="text-emerald-400">+92%</b></span>
+                <b class="text-emerald-400">${usd((+blitzStake || 0) * 1.92)} <span class="text-[10px] text-zinc-500 font-normal">${t.totalReturn}</span></b>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button onClick=${() => goBlitz('up')} class="py-3 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex flex-col items-center gap-0.5 shadow-lg shadow-emerald-900/30 transition">
+                  <span class="text-sm">↗ ${t.upBtn}</span>
+                  <span class="text-[9px] font-normal opacity-90">&gt; ${usd(a.p)}</span>
+                </button>
+                <button onClick=${() => goBlitz('down')} class="py-3 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-xs flex flex-col items-center gap-0.5 shadow-lg shadow-rose-900/30 transition">
+                  <span class="text-sm">↘ ${t.downBtn}</span>
+                  <span class="text-[9px] font-normal opacity-90">&lt; ${usd(a.p)}</span>
+                </button>
+              </div>
+
+              ${(g.B || []).length > 0 && h`<div class="pt-2 border-t border-zinc-800 space-y-1.5">
+                <span class="text-[10px] font-bold uppercase text-zinc-400 block">${t.activeBlitz} (${g.B.length})</span>
+                <div class="max-h-36 overflow-y-auto space-y-1">
+                  ${g.B.map(b => {
+                    const cur = g.a[b.sym].p;
+                    const win = (b.dir === 'up' && cur > b.entryPx) || (b.dir === 'down' && cur < b.entryPx);
+                    return h`<div key=${b.id} class="p-1.5 rounded bg-[#08080a] border ${win ? 'border-emerald-500/40' : 'border-rose-500/40'} text-[11px]">
+                      <div class="flex justify-between font-bold">
+                        <span>${b.sym} ${b.dir === 'up' ? '↗' : '↘'} $${b.stake}</span>
+                        <span class=${win ? 'text-emerald-400' : 'text-rose-400'}>${win ? t.winning : t.losing} · ${b.remSec}s</span>
+                      </div>
+                      <div class="w-full h-1 bg-zinc-800 rounded mt-1 overflow-hidden">
+                        <div class="h-full ${win ? 'bg-emerald-500' : 'bg-rose-500'} transition-all" style=${{ width: (b.remSec / b.totalSec * 100) + '%' }}></div>
+                      </div>
+                    </div>`;
+                  })}
+                </div>
+              </div>`}
+            </div>` : h`<div class="space-y-2.5">
+              <div class="p-2 rounded bg-[#08080a] border border-zinc-800 flex justify-between items-center text-xs">
+                <div>
+                  <span class="text-[10px] text-zinc-500 block">${t.position}</span>
+                  <b class=${P.q > 0 ? 'text-emerald-400' : P.q < 0 ? 'text-rose-400' : 'text-zinc-400'}>${P.q > 0 ? `LONG ${P.q} (${P.lev}x)` : P.q < 0 ? `SHORT ${Math.abs(P.q)} (${P.lev}x)` : t.neutral}</b>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-zinc-500 block">${t.unrealizedPnl}</span>
+                  <b class=${cl(uPnl)}>${fmtBillion(uPnl)}</b>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 bg-zinc-900 p-1 rounded border border-zinc-800 text-[11px]">
+                <button onClick=${() => setOrderType('market')} class="py-1 rounded font-semibold ${orderType === 'market' ? 'bg-white text-black font-bold' : 'text-zinc-400'}">${t.marketOrder}</button>
+                <button onClick=${() => { setOrderType('limit'); setLimitPx(a.p.toFixed(2)); }} class="py-1 rounded font-semibold ${orderType === 'limit' ? 'bg-white text-black font-bold' : 'text-zinc-400'}">${t.limitOrder}</button>
+              </div>
+
+              ${orderType === 'limit' && h`<label class="block text-xs text-zinc-400">
+                ${t.targetPrice}
+                <input type="number" step="0.01" value=${limitPx} onInput=${e => setLimitPx(e.target.value)} class="mt-1"/>
+              </label>`}
+
+              <div>
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-zinc-400">${t.leverage} (${t.maxWord} ${maxLevAllowed}x)</span>
+                  <b class="text-white">${lev}x</b>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                  ${[1, 2, 5, 10, 20].filter(v => v <= maxLevAllowed).map(v => h`<button key=${v} onClick=${() => setLev(v)} class="py-1 rounded text-[11px] font-bold border ${lev === v ? 'bg-white text-black border-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}">${v}x</button>`)}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-1 bg-zinc-900 p-1 rounded border border-zinc-800 text-[11px]">
+                <button onClick=${() => setByUsd(false)} class="py-1 rounded ${!byUsd ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400'}">${t.units}</button>
+                <button onClick=${() => setByUsd(true)} class="py-1 rounded ${byUsd ? 'bg-zinc-800 text-white font-semibold' : 'text-zinc-400'}">${t.usdAmount}</button>
+              </div>
+
+              <label class="block text-xs text-zinc-400">
+                ${byUsd ? t.marginToInvest : t.shareQty}
+                <input type="number" step="any" value=${q} onInput=${e => setQ(e.target.value)} class="mt-1"/>
+              </label>
+
+              <div class="flex gap-1">
+                ${[0.25, 0.5, 1].map(p => h`<button key=${p} onClick=${() => setQ(String(byUsd ? Math.floor(g.cash * p * 100) / 100 : uf(a, 'buy', g.cash * p, lev, g)))} class="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px]">${p * 100}%</button>`)}
+                ${P.q !== 0 && h`<button onClick=${() => { setByUsd(false); setQ(String(Math.abs(P.q))); }} class="flex-1 py-1 rounded bg-zinc-200/15 border border-zinc-500 text-white text-[10px] font-bold">${t.closeBtn}</button>`}
+              </div>
+
+              <div class="grid grid-cols-2 gap-1.5 pt-1 border-t border-zinc-800/80">
+                <input type="number" step="0.01" placeholder="Stop Loss" value=${sl} onInput=${e => setSl(e.target.value)} class="text-xs"/>
+                <input type="number" step="0.01" placeholder="Take Profit" value=${tp} onInput=${e => setTp(e.target.value)} class="text-xs"/>
+              </div>
+              ${rrRatio && h`<div class="text-[10px] text-center text-zinc-400">${t.rrRatio} <b class="text-white">1 : ${rrRatio}</b></div>`}
+              ${P.q !== 0 && h`<button onClick=${setLv} class="w-full py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs">${t.applySlTp}</button>`}
+
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <button onClick=${() => go('buy')} class="py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-900/20">${P.q < 0 ? t.closeShort : t.buyLong}</button>
+                <button onClick=${() => go('sell')} class="py-2 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-lg shadow-rose-900/20">${P.q > 0 ? t.sellLong : t.shortSell}</button>
+              </div>
+            </div>`}
+          </div>
+
+          <div class="${PN} p-3">
+            <div class="flex justify-between items-center mb-2">
+              <b class="text-[11px] uppercase tracking-wider text-zinc-300">${t.orderBook} (${a.sym})</b>
+              <span class="text-[10px] text-zinc-500">Depth L2</span>
+            </div>
+            <${Book} a=${a} t=${t} onPickPrice=${px => { setOrderType('limit'); setLimitPx(px); }}/>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="pointer-events-none fixed bottom-2.5 right-3.5 z-40 select-none text-[11px] font-semibold tracking-wider text-zinc-500/50">
-      Dante Ronavov
-    </div>
-
+    <${CapitalModal} open=${capModalOpen} onClose=${() => setCapModalOpen(false)} currentCap=${g.cash} onApply=${applyCapitalChange} lang=${lang} t=${t}/>
     <${ProfileModal} open=${profileModalOpen} onClose=${() => setProfileModalOpen(false)} profile=${profile} onSave=${saveProfile} t=${t}/>
-
-    <${CapitalModal} open=${capModalOpen} onClose=${() => setCapModalOpen(false)} currentCap=${cap} onApply=${applyCapitalChange} lang=${lang} t=${t}/>
-
-    <${NewsPortalModal}
-      open=${nm}
-      onClose=${() => setNm(false)}
-      nl=${nl}
-      g=${g}
-      nf=${nf}
-      setNf=${setNf}
-      newsQuery=${newsQuery}
-      setNewsQuery=${setNewsQuery}
-      onTriggerNews=${triggerManualNews}
-      onSelectAsset=${s => selectAsset(s)}
-      onOpenArticle=${art => setActiveArticle(art)}
-      lang=${lang}
-      t=${t}
-    />
-
-    <${ArticleReaderModal}
-      item=${activeArticle}
-      g=${g}
-      onClose=${() => setActiveArticle(null)}
-      onSelectAsset=${s => selectAsset(s)}
-      onSelectArticle=${art => setActiveArticle(art)}
-      lang=${lang}
-      t=${t}
-    />
+    <${NewsPortalModal} open=${nm} onClose=${() => setNm(false)} nl=${nl} g=${g} nf=${nf} setNf=${setNf} newsQuery=${newsQuery} setNewsQuery=${setNewsQuery} onTriggerNews=${triggerManualNews} onSelectAsset=${selectAsset} onOpenArticle=${setActiveArticle} lang=${lang} t=${t}/>
+    <${ArticleReaderModal} item=${activeArticle} g=${g} onClose=${() => setActiveArticle(null)} onSelectAsset=${selectAsset} onSelectArticle=${setActiveArticle} lang=${lang} t=${t}/>
   </div>`;
 }
 
